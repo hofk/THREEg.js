@@ -94,14 +94,19 @@ Parameters briefly explained in THREEg.js:
 	explode: function ( t ) { return 0 };
 */
 
-// contourmode implemented with function sinuslike ( x ) { 
-	// pi2 = Math.PI / 2 // pX = pointX( t ) // pY = pointY( t )
-  ...
-// 'rounding' 
+// contourmode 'rounding' 
 		
 	var y1 = 2 / pi * Math.asin( Math.sin( x ) );
 	var y2 = Math.sin( x );	
 	return y1 + g.rounding( t ) * ( y2 - y1 );
+	
+// contourmode 'linear', 'bezier' implemented with function sinuslike ( x ) { ...
+
+	/* Extension of a function y=f(x), 0 < x < pi2, 0 < y < 1 with f(0) = 0, f(pi2) = 1
+		to a function with period 2*pi.
+		// pi = Math.PI // pi2 = Math.PI / 2  
+		// pX = pointX( t ) // pY = pointY( t )
+	*/	
 		
 // 'linear'
 			

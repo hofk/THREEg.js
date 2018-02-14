@@ -100,7 +100,7 @@ Parameters briefly explained in THREEg.js:
 	var y2 = Math.sin( x );	
 	return y1 + g.rounding( t ) * ( y2 - y1 );
 	
-// contourmode 'linear', 'bezier' implemented with function sinuslike ( x ) { ...
+// contourmode 'profile', 'linear', 'bezier' implemented with function sinuslike ( x ) { ...
 
 	/* Extension of a function y=f(x), 0 < x < pi2, 0 < y < 1 with f(0) = 0, f(pi2) = 1
 		to a function with period 2*pi.

@@ -1,13 +1,14 @@
 # THREEg
 
 three. js addon to create special or extended geometries.
+
 The addon generates non indexed BufferGeometries. This allows an explosion representation.
 
 @author hofk / http://sandbox.threejs.hofk.de/
 
 ---
 
-The first geometry in THREEg  is an #enlarged sphere. 
+The first geometry in THREEg  is an #### enlarged #### sphere. 
 It is made up of eight parts. Multi material is supported.
 
 ```javascript
@@ -73,3 +74,51 @@ Parameters briefly explained in THREEg.js:
 	
 	*/
  ``` 	
+ ---
+ 
+```javascript
+/* defaults and // values
+	
+	equator: 6,
+	uvmode: 0, //1
+	contourmode: 'rounding'; // 'profile'  'bezier' 'linear' 
+	parts: [ 1, 1, 1, 1, 1, 1, 1, 1 ],
+	radius: function ( t ) { return 1 },
+	rounding: function ( t ) { return 1 };
+	profile: function ( x, t ) { return Math.sin( x ) };
+	pointX: function ( t ) { return 0.001 };
+	pointY: function ( t ) { return 0.999 };
+	driftX: function ( t ) { return 0 };
+	driftY: function ( t ) { return 0 };
+	driftZ: function ( t ) { return 0 };
+	explode: function ( t ) { return 0 };
+*/
+
+// contourmode implemented with function sinuslike ( x ) { 
+	// pi2 = Math.PI / 2 // pX = pointX( t ) // pY = pointY( t )
+  ...
+// 'rounding' 
+		
+	var y1 = 2 / pi * Math.asin( Math.sin( x ) );
+	var y2 = Math.sin( x );	
+	return y1 + g.rounding( t ) * ( y2 - y1 );
+		
+// 'linear'
+			
+	var m = ( 1 - pY ) / ( pi2 - pX );  
+	return x > pX ? m * x + 1 - pi2 * m : pY / pX * x;
+	
+// 'bezier'
+	var a = pi2 - 2 * pX;		
+	if( a === 0 ) {				
+		tm = x / ( 2 * pX );				
+	} else {				
+		var tp = pX / a;
+		var tr = tp * tp  + x / a;				
+		tm =  - tp + ( pX < pi2 / 2 ? 1 : -1 ) * Math.sqrt( tr );	
+	}			
+	return ( 1 - 2 * pY ) * tm * tm + 2 * pY * tm;	
+  ... 
+  }
+
+ ``` 

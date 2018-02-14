@@ -8,7 +8,7 @@ The addon generates non indexed BufferGeometries. This allows an explosion repre
 
 ---
 
-The first geometry in THREEg  is an #### enlarged #### sphere. 
+The first geometry in THREEg  is an enlarged sphere. 
 It is made up of eight parts. Multi material is supported.
 
 ```javascript

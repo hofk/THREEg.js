@@ -1,4 +1,4 @@
-# THREEg
+# THREEg.js
 
 three. js addon to create special or extended geometries.
 

@@ -94,6 +94,99 @@ Parameters briefly explained in THREEg.js:
 	explode: function ( t ) { return 0 };
 */
 
+---
+
+The second geometry in THREEg  is an enlarged box. 
+It is made up of 26 parts. Multi material is supported.
+
+```javascript
+	geometry = new THREE.BufferGeometry();
+	geometry.createMagicBox = THREEg.createMagicBox; // insert the methode from THREEg.js
+	geometry.createMagicBox( parameters ); // apply the methode
+	
+	// mesh
+	mesh = new THREE.Mesh( geometry, materials );
+        scene.add( mesh );
+
+ ``` 
+ 
+  Include: <script src="THREEg.js"></script>
+  
+  #### Example:
+  
+```javascript
+geometry = new THREE.BufferGeometry();
+geometry.createMagicBox = THREEg.createMagicBox; // insert the methode from THREEg.js
+geometry.createMagicBox( {
+  
+	smoothness: 1,
+	radius: function( t ){ return 0.08 + 0.08 * Math.sin( 0.5 * t ) },
+	materials: [ 3, 3, 4, 4, 5, 5, 9, 9, 9, 9, 9 ],
+	width: function( t ){ return 0.7 + 0.3 * Math.sin( 0.5 * t ) },
+	height: function( t ){ return 0.7 + 0.3 * Math.cos( 0.5 * t ) },
+	depth: function( t ){ return 0.7 + 0.3 * Math.cos( 0.5 * t ) * Math.sin( 0.5 * t ) },
+	
+ } ); 
+	  
+  ``` 
+  
+    
+Parameters briefly explained in THREEg.js:
+
+ ```javascript
+	/*	parameter overview	--- all parameters are optional ---
+	p = {
+		
+			// simple properties
+			
+		widthSegments,
+		heightSegments,
+		depthSegments,
+		smoothness,
+		
+		uvmode,
+		contourmode,
+		explodemode,
+		
+			// arrays (sides order +x, -x, +y, -y, +z, -z)
+			
+		sides, // values: no side: 0, complete: 1, in addition: no plane: 2, edgeless: 3, no corners: 4
+		lidHinges // values for direction are 0: first, 1: second following axis (order x, y, z, x, y)
+		materials, // index for 6 sides and for 3 edges (parallel to axis), 2 corners (+y, -y)		
+		
+			// functions with  parameter time   // function ( t )
+	
+		width,
+		height,
+		depth,
+		radius,
+		
+		waffleDeep,		// depth of center vertex	
+		rounding,
+		profile,		// y = f( x, t ),  0 < x < PI / 2, 0 < y < 1
+		pointX,			// normally interval 0 to PI / 2
+		pointY,			// normally interval 0 to 1
+		
+		lidAngle0,		// lid angle to side
+		lidAngle1,
+		lidAngle2,
+		lidAngle3,
+		lidAngle4,
+		lidAngle5,
+		
+		explode,
+	}	
+	
+	*/
+ ``` 
+ ```javascript
+/* defaults and // values
+ // see THREEg.js	
+
+*/
+ 
+ ---
+
 // contourmode 'rounding' 
 		
 	var y1 = 2 / pi * Math.asin( Math.sin( x ) );

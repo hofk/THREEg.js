@@ -93,7 +93,7 @@ Parameters briefly explained in THREEg.js:
 	driftZ: function ( t ) { return 0 };
 	explode: function ( t ) { return 0 };
 */
-
+```
 ---
 
 The second geometry in THREEg  is an enlarged box. 
@@ -179,12 +179,14 @@ Parameters briefly explained in THREEg.js:
 	
 	*/
  ``` 
+ 
+ 
  ```javascript
 /* defaults and // values
  // see THREEg.js	
 
 */
- 
+ ```
  ---
 
 // contourmode 'rounding' 

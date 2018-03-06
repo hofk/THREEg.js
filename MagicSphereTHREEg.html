@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<!--   *** MagicSphere - THREEg - ***
+/**
+ * @author hofk / http://threejs.hofk.de/
+*/
+-->
+<html lang="de">
+<head>
+	<title> Magic Sphere </title>
+	<meta charset="utf-8" />
+		<style>	
+			
+			#out {
+			
+				overflow: hidden;
+				position: absolute;
+				top: 110px;
+				left: 5px;	
+				width: 500px;
+				height: 500px;
+				z-index: 99;
+				opacity: 0.8;
+				background: #eeeeee;
+				border: 2px solid #bbbbbb;
+				border-radius: 4px;
+				padding: 0px;
+				text-align: left;
+				
+			}
+			
+			input[type="number"] {width:70px}
+			input[type="range"] {width: 400px}
+			
+		</style>
+</head>
+<body bgcolor="#cccccc " >
+
+	<div style="position: absolute; top: 15px; left: 15px; text-align: left;">
+		
+		 Magic Sphere - example No. 
+		<input type="number" id="example"	min="0" value="0" step="1" > <br />
+		velocity 0
+		<input type="range" id="velocity" min="0" max="10" value="1" step="0.1" > 10 <br />
+		<input type="checkbox" id="vertexIndexes"  > vertex - 
+		<input type="checkbox" id="faceIndexes"  > face indexes
+		<input type="checkbox" id="normals"  > normals ... size
+		<input type="number"   id="indexSize" min="0" max="0.1" value="0.01" step="0.01" > 	<br />
+		<button id="showHidePs" > hide parameters </button> 
+		<div id="out" > </div>
+		
+	</div>
+
+</body>
+
+<script src="three.min.90.js"></script>
+<script src="OrbitControls.js"></script>
+<script src="THREEx.WindowResize.js"></script>
+<script src="THREEg.js"></script>
+
+<script>
+
+'use strict'
+
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 2000 );
+camera.position.set( 0, 1.5, 5);
+
+var renderer = new THREE.WebGLRenderer( { antialias: true } );
+renderer.setSize( window.innerWidth, window.innerHeight );
+renderer.setClearColor( 0xeeeeee );
+
+var container = document.createElement( 'div' );
+document.body.appendChild( container );
+container.appendChild( renderer.domElement );
+
+THREEx.WindowResize( renderer, camera );
+var controls = new THREE.OrbitControls( camera, renderer.domElement );
+controls.enableZoom = true;
+
+var light1 = new THREE.PointLight();
+light1.position.set( 1.5, 4, 7 );
+scene.add( light1 ); 
+var light2 = new THREE.PointLight();
+light2.position.set( -1, -8, -8 );
+scene.add( light2 );
+
+var clock  = new THREE.Clock( true );
+var time;
+
+// material
+var uvTex		= new THREE.TextureLoader().load( "uvgrid01.png" );
+var dahliaTex 	= new THREE.TextureLoader().load( "dahlia.png" );
+
+var side =  THREE.DoubleSide;
+
+var materials = [
+																						// material index:
+	new THREE.MeshBasicMaterial( { transparent: true, opacity: 0.15, 	side: side } ),	//  0 transparent
+	new THREE.MeshBasicMaterial( { map: uvTex,							side: side } ),	//  1 uv grid
+	new THREE.MeshPhongMaterial( { color: 0xff0000, emissive: 0xff0000, side: side,	wireframe: true } ), //  2 red
+	new THREE.MeshPhongMaterial( { color: 0x00ff00, emissive: 0x00ff00, side: side,	wireframe: true } ), //  3 green
+	new THREE.MeshPhongMaterial( { color: 0x0000ff, emissive: 0x0000ff, side: side,	wireframe: true } ), //  4 blue
+	new THREE.MeshPhongMaterial( { color: 0xffff00, emissive: 0xffff00, side: side } ),	//  5 yellow
+	new THREE.MeshPhongMaterial( { color: 0xff00ff, emissive: 0xff00ff, side: side } ),	//  6 mgenta
+	new THREE.MeshPhongMaterial( { color: 0x00ffff, emissive: 0x00ffff, side: side } ),	//  7 cyan	
+	new THREE.MeshBasicMaterial( { map: dahliaTex,						side: side } ),	//  8 photo dahlia (free)
+	new THREE.MeshPhongMaterial( { color: 0xee55ff, emissive: 0x7733dd, side: side } ),	//  9 color
+	new THREE.MeshPhongMaterial( { color: 0x444444, emissive: 0x333333, side: side } )		// 10 grey
+	
+];
+
+var material = new THREE.MeshBasicMaterial( { map: uvTex, side: side, wireframe: false } );
+
+var velocity = document.getElementById( "velocity" );
+var example = document.getElementById( "example" );
+var vertexIndexes = document.getElementById( "vertexIndexes" );
+var faceIndexes = document.getElementById( "faceIndexes" );
+var normals = document.getElementById( "normals" );
+var indexSize = document.getElementById( "indexSize" );
+var showHidePs = document.getElementById( "showHidePs" );
+example.onchange = showNewMesh;
+example.onclick = showNewMesh;
+example.onkeyup = showNewMesh;
+vertexIndexes.onchange = showNewMesh;
+faceIndexes.onchange = showNewMesh;
+normals.onchange = showNewMesh;
+indexSize.onchange = showNewMesh;
+showHidePs.onclick = showHideParams;
+
+var parameterExamples = [];
+
+parameterExamples[ 0 ] = { }; // all parameters default
+
+parameterExamples[ 1 ] = {
+	contourmode: 'linear',
+}
+
+parameterExamples[ 2 ] = {
+	equator: 12,
+	contourmode: 'profile',
+	profile: function( x, t ){ return 0.90 * Math.sin( x ) + 0.10 * Math.sin( 9 * x ) * Math.sin( t ) },
+};
+
+parameterExamples[ 3 ] = {
+	equator: 8,
+	contourmode: 'bezier',
+	parts: [ 1, 1, 1, 0, 0, 1, 1, 1 ],
+	radius: function( t ){ return  1.2 * ( 0.3 + Math.abs( Math.sin( 0.4 * t ) ) ) },
+	pointX: function( t ){ return  0.6 * ( 1 + Math.sin( 0.4 * t) ) },
+	pointY: function( t ){ return  0.4 * ( 1 + Math.sin( 0.3 * t) ) },
+};
+
+parameterExamples[ 4 ] = {
+parts: [ 1, 1, 1, 1, 0, 1, 0, 1 ],
+	driftX: function( t ){ return  0.1 * Math.abs( Math.sin( 0.6 * t ) ) },
+	driftY: function( t ){ return  0.1 * Math.abs( Math.sin( 0.5 * t ) ) },
+	driftZ: function( t ){ return  0.1 * Math.abs( Math.cos( 0.2 * t ) ) },
+};
+
+parameterExamples[ 5 ] = {
+	// contourmode: 'rounding', // default
+	rounding: function( t ){ return 0.5 * ( 1 + Math.sin( 0.4 * t ) ) },
+	explode: function( t ){ return  0.05  * ( 1 + Math.cos( 0.1 * t ) ) },
+}
+
+parameterExamples[ 6 ] = {
+	equator: 8,
+	contourmode: 'profile',
+	profile: function( x, t ){ return 1 - Math.pow( ( Math.PI / 2 - x ) / ( Math.PI / 2 ), 5 ) }
+}
+
+parameterExamples[ 7 ] = {
+	uvmode: 1,
+	contourmode: 'linear',
+	pointX: function( t ){ return  0.6 * ( 1 + Math.sin( 0.4 * t ) ) },
+	pointY: function( t ){ return  0.4 * ( 1 + Math.sin( 0.3 * t ) ) },
+}
+
+parameterExamples[ 8 ] = {
+	equator: 9,
+	contourmode: 'profile',
+	profile: function( x, t ){ return Math.pow( 2 * x / Math.PI , 3 ) },
+	driftY: function( t ){ return  0.1 },
+}
+
+parameterExamples[ 9 ] = {
+	equator: 16,
+	contourmode: 'profile',
+	parts: [ 1, 1, 1, 1 ],
+	radius: function( t ){ return geometry.profile( 4, t ) },
+	profile: function( x, t ){ return Math.sqrt( x / Math.PI / 2 )  * ( 1.5 + Math.sin( 0.3 * t ) ) },
+}
+
+parameterExamples[ 10 ] = {
+	equator: 10,
+	contourmode: 'profile',
+	parts: [  0, 0, 1, 1, 1, 1, 0, 0],
+	profile: function( x, t ){ return  x < 0.01 ? 0 : x > 0.9 ? 1 : 1 / ( 1 + Math.exp( - 2 * x + 2 ) ) },
+}
+
+parameterExamples[ 11 ] = {
+	equator: 24,
+	uvmode: 1,
+	contourmode: 'profile',
+	parts: [ 1, 1, 1, 1 ],
+	profile: function( x, t ){ return 0.96 * Math.sin( x ) + 0.04 * Math.sin( 17 * x ) },
+}
+
+parameterExamples[ 12 ] = {
+	equator: 30,
+	uvmode: 1,
+	contourmode: 'profile',
+	parts: [ 1, 0, 1, 0, 1, 0, 1, 0 ],
+	profile: function( x, t ){ return 1 - 0.97* Math.cos( x ) - 0.03 * Math.cos( 21 * x ) },
+}
+
+
+parameterExamples[ 13 ] = {
+
+}
+
+var geometry;
+var mesh;
+var indexesMode;
+var vertexFaceNumbersHelper;
+var vertexNormalsHelper;
+var v;		// velocity
+
+var showGeo = true;
+var showParams = false;
+out.innerHTML = "";
+out.style.visibility = 'visible';
+showNewMesh( );
+
+animate();
+
+//............................
+function showHideParams(  ) {
+	
+	if ( showParams ) {
+		
+		showHidePs.innerHTML = "hide parameters";
+		out.style.visibility ='visible';
+		
+	} else {
+		
+		showHidePs.innerHTML = "show parameters";
+		out.style.visibility = 'hidden';
+		
+	}
+	
+	showParams = !showParams;
+	
+}
+
+function showNewMesh( ) {
+	
+	if ( mesh ) {
+		
+		scene.remove(mesh);
+		geometry.dispose();
+		
+	}
+	
+	if ( vertexFaceNumbersHelper ) {
+		
+		scene.remove( vertexFaceNumbersHelper );
+		
+	}
+	
+	if ( vertexNormalsHelper ) {
+		
+		scene.remove( vertexNormalsHelper );
+		vertexNormalsHelper.geometry.dispose();
+		
+	}
+	
+	var parameters = parameterExamples[ example.value ];
+	
+	out.innerHTML = " parameters = {  <br /> "
+	if ( parameters.equator !== undefined ) out.innerHTML += " equator: " + parameters.equator + ", <br />";
+	if ( parameters.uvmode !== undefined ) out.innerHTML += " uvmode: " + parameters.uvmode + ", <br />";
+	if ( parameters.contourmode !== undefined ) out.innerHTML += " contourmode: " + "\'" + parameters.contourmode + "\'" + ", <br />";
+	
+	if ( parameters.parts !== undefined )out.innerHTML += " parts: [" + parameters.parts + " ], <br />";
+
+	if ( parameters.radius !== undefined ) out.innerHTML += " radius: " + parameters.radius + ", <br />";
+	if ( parameters.rounding !== undefined ) out.innerHTML += " rounding: " + parameters.rounding + ", <br />";
+	if ( parameters.profile !== undefined ) out.innerHTML += " profile: " + parameters.profile + ", <br />";
+	
+	if ( parameters.pointX !== undefined ) out.innerHTML += " pointX: " + parameters.pointX + ", <br />";
+	if ( parameters.pointY !== undefined ) out.innerHTML += " pointY: " + parameters.pointY + ", <br />";
+	
+	if ( parameters.driftX !== undefined ) out.innerHTML += " driftX: " + parameters.driftX + ", <br />";
+	if ( parameters.driftY !== undefined ) out.innerHTML += " driftY: " + parameters.driftY + ", <br />";
+	if ( parameters.driftZ !== undefined ) out.innerHTML += " driftZ: " + parameters.driftZ + ", <br />";
+	
+	if ( parameters.explode !== undefined ) out.innerHTML += " explode: " + parameters.explode + ", <br />";
+	
+	out.innerHTML += " } "
+	
+	if ( example.value < 1 ) {
+		
+		out.innerHTML += " <br /> <br /> Without parameters a ball of eight parts. <br /> <br /> ";
+		out.innerHTML += " Copy and modify the parameter examples. <br /> <br /> "
+		out.innerHTML += " Include script src='THREEg.js' <br /><br />"
+		out.innerHTML += " Use: <br /> "
+		out.innerHTML += "	geometry = new THREE.BufferGeometry(); <br />"
+		out.innerHTML += "	geometry.createMagicSphere = THREEg.createMagicSphere; <br />"
+		out.innerHTML += "	geometry.createMagicSphere( parameters ); <br />"
+		out.innerHTML += "	mesh = new THREE.Mesh( geometry, materials ) <br /> <br />"
+		out.innerHTML += "	You get a non-indexed BufferGeometry, a so-called triangle soup."
+		
+	}
+	
+	geometry = new THREE.BufferGeometry();
+	geometry.createMagicSphere = THREEg.createMagicSphere; // insert the methode from THREEg.js
+	geometry.createMagicSphere( parameters ); // apply the methode
+	
+	// mesh
+	mesh = new THREE.Mesh( geometry, materials );
+	//mesh = new THREE.Mesh( geometry, material );
+	
+	indexesMode = 0;
+	indexesMode += vertexIndexes.checked ? 1 : 0;
+	indexesMode += faceIndexes.checked ? 2 : 0;
+	
+	if ( indexesMode > 0 ) {
+		
+		vertexFaceNumbersHelper = new THREEg.vertexFaceNumbersHelper( mesh, indexesMode, indexSize.value, 0x0000aa );
+		vertexFaceNumbersHelper.update( indexesMode );
+		
+	}
+	
+	if ( normals.checked ) {
+	
+		vertexNormalsHelper = new THREE.VertexNormalsHelper( mesh, indexSize.value, 0x222222, 1 );
+		scene.add( vertexNormalsHelper);
+		vertexNormalsHelper.update();
+		
+	}
+	
+	scene.add( mesh );
+	
+	showGeo = true;	// start animation
+	
+}
+
+function animate( ) {
+	
+	requestAnimationFrame( animate );
+	
+	if ( showGeo ) {
+		
+		time = clock.getElapsedTime( );
+		v = velocity.value;
+		
+		geometry.morphVerticesMagicSphere( v * time );
+		
+		if (  indexesMode > 0 ) {
+			
+			vertexFaceNumbersHelper.update( indexesMode );
+			
+		}
+		
+		if ( normals.checked ) {
+			
+			vertexNormalsHelper.update();
+			
+		}
+		
+	}
+	
+	renderer.render( scene, camera );
+	controls.update( );
+	
+}
+</script>
+
+</html>

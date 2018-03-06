@@ -84,14 +84,14 @@ Parameters briefly explained in THREEg.js:
 	contourmode: 'rounding'; // 'profile'  'bezier' 'linear' 
 	parts: [ 1, 1, 1, 1, 1, 1, 1, 1 ],
 	radius: function ( t ) { return 1 },
-	rounding: function ( t ) { return 1 };
-	profile: function ( x, t ) { return Math.sin( x ) };
-	pointX: function ( t ) { return 0.001 };
-	pointY: function ( t ) { return 0.999 };
-	driftX: function ( t ) { return 0 };
-	driftY: function ( t ) { return 0 };
-	driftZ: function ( t ) { return 0 };
-	explode: function ( t ) { return 0 };
+	rounding: function ( t ) { return 1 },
+	profile: function ( x, t ) { return Math.sin( x ) },
+	pointX: function ( t ) { return 0.001 },
+	pointY: function ( t ) { return 0.999 },
+	driftX: function ( t ) { return 0 },
+	driftY: function ( t ) { return 0 },
+	driftZ: function ( t ) { return 0 },
+	explode: function ( t ) { return 0 },
 */
 ```
 ---
@@ -183,7 +183,38 @@ Parameters briefly explained in THREEg.js:
  ```javascript
 /* defaults and values
 
- 	// see THREEg.js	
+	widthSegments: 	2,
+	heightSegments: 2,
+	depthSegments: 	2,	
+	smoothness: 	4,
+	
+	uvmode: 		0,
+	contourmode:	'rounding', // 'profile' 'bezier' 'linear' 
+	explodemode:	'center', // 'normal'
+	
+	sides: 			[ 1, 1, 1, 1, 1, 1 ],
+	lidHinges:		[ 0, 0, 0, 0, 0, 0 ],
+	materials: 		[ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], // material index
+	
+	width: 			function ( t ) { return 1 },
+	height: 		function ( t ) { return 1 },
+	depth: 			function ( t ) { return 1 },
+	radius: 		function ( t ) { return 0.1 },
+	
+	waffleDeep:		function ( t ) { return 0 },		
+	rounding:		function ( t ) { return 1 },		
+	profile: 		function ( x, t ) { return Math.sin( x ) },	
+	pointX: 		function ( t ) { return 0.001 },
+	pointY: 		function ( t ) { return 0.999 },
+	
+	lidAngle0:		function ( t ) { return 0 },
+	lidAngle1:		function ( t ) { return 0 },
+	lidAngle2:		function ( t ) { return 0 },
+	lidAngle3:		function ( t ) { return 0 },
+	lidAngle4:		function ( t ) { return 0 },
+	lidAngle5:		function ( t ) { return 0 },
+	
+	explode:		function ( t ) { return 0 },	
 
 */
  ```

@@ -64,8 +64,8 @@ Parameters briefly explained in THREEg.js:
 		radius,
 		rounding,
 		profile,		// y = f( x, t ),  0 < x < PI / 2, 0 < y < 1
-		pointX,			// interval 0 to PI / 2
-		pointY,			// interval 0 to 1
+		pointX,			// normally interval 0 to PI / 2
+		pointY,			// normally interval 0 to 1
 		driftX,
 		driftY,
 		driftZ,

@@ -188,9 +188,9 @@ Parameters briefly explained in THREEg.js:
 	depthSegments: 2,	
 	smoothness: 4,
 	
-	uvmode: 		0,
-	contourmode:	'rounding', // 'profile' 'bezier' 'linear' 
-	explodemode:	'center', // 'normal'
+	uvmode: 0,
+	contourmode: 'rounding', // 'profile' 'bezier' 'linear' 
+	explodemode: 'center', // 'normal'
 	
 	sides: 			[ 1, 1, 1, 1, 1, 1 ],
 	lidHinges:		[ 0, 0, 0, 0, 0, 0 ],

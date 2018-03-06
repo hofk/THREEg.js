@@ -183,10 +183,10 @@ Parameters briefly explained in THREEg.js:
  ```javascript
 /* defaults and values
 
-	widthSegments: 	2,
+	widthSegments: 2,
 	heightSegments: 2,
-	depthSegments: 	2,	
-	smoothness: 	4,
+	depthSegments: 2,	
+	smoothness: 4,
 	
 	uvmode: 		0,
 	contourmode:	'rounding', // 'profile' 'bezier' 'linear' 

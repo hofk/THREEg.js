@@ -74,7 +74,6 @@ Parameters briefly explained in THREEg.js:
 	
 	*/
  ``` 	
- ---
  
 ```javascript
 /* defaults and // values
@@ -129,12 +128,11 @@ geometry.createMagicBox( {
  } ); 
 	  
   ``` 
-  
-    
+      
 Parameters briefly explained in THREEg.js:
 
  ```javascript
-	/*	parameter overview	--- all parameters are optional ---
+/*	parameter overview	--- all parameters are optional ---
 	p = {
 		
 			// simple properties
@@ -177,17 +175,19 @@ Parameters briefly explained in THREEg.js:
 		explode,
 	}	
 	
-	*/
+*/
  ``` 
  
  
  ```javascript
-/* defaults and // values
- // see THREEg.js	
+/* defaults and values
+
+ 	// see THREEg.js	
 
 */
  ```
  ---
+further information:
 
 // contourmode 'rounding' 
 		

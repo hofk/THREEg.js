@@ -5,6 +5,7 @@ three. js addon to create special or extended geometries.
 The addon generates non indexed BufferGeometries. This allows an explosion representation.
 
 @author hofk / http://sandbox.threejs.hofk.de/
+ or http://sandboxthreeg.threejs.hofk.de/
 
 ---
 

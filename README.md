@@ -199,9 +199,9 @@ Parameters briefly explained in THREEg.js:
 	lidHinges:		[ 0, 0, 0, 0, 0, 0 ],
 	materials: 		[ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], // material index
 	
-	width: 			function ( t ) { return 1 },
+	width: 		function ( t ) { return 1 },
 	height: 		function ( t ) { return 1 },
-	depth: 			function ( t ) { return 1 },
+	depth: 		function ( t ) { return 1 },
 	radius: 		function ( t ) { return 0.1 },
 	
 	waffleDeep:		function ( t ) { return 0 },		

@@ -275,6 +275,8 @@ further information:
 	return x > pX ? m * x + 1 - pi2 * m : pY / pX * x;
 	
 // 'bezier'
+
+
 	var a = pi2 - 2 * pX;		
 	if( a === 0 ) {				
 		tm = x / ( 2 * pX );				

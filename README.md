@@ -55,6 +55,7 @@ Parameters briefly explained in THREEg.js:
 		equator,
 		uvmode,
 		contourmode,
+		explodemode,
 		
 			// array, value 1 for octant, otherwise arbitrary - upper counterclockwise, lower clockwise
 		parts, 
@@ -69,7 +70,7 @@ Parameters briefly explained in THREEg.js:
 		driftX,
 		driftY,
 		driftZ,
-		explod,			// factor for exploded view - non indexed BufferGeometry
+		explode,		// factor for exploded view - non indexed BufferGeometry
 		
 	}	
 	
@@ -81,7 +82,9 @@ Parameters briefly explained in THREEg.js:
 	
 	equator: 6,
 	uvmode: 0, //1
-	contourmode: 'rounding'; // 'profile'  'bezier' 'linear' 
+	contourmode: 'rounding'; // 'profile'  'bezier' 'linear'
+	explodemode: 'center'; // 'normal'
+	
 	parts: [ 1, 1, 1, 1, 1, 1, 1, 1 ],
 	radius: function ( t ) { return 1 },
 	rounding: function ( t ) { return 1 },

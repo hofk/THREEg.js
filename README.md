@@ -286,7 +286,7 @@ further information:
 		tm =  - tp + ( pX < pi2 / 2 ? 1 : -1 ) * Math.sqrt( tr );	
 	}			
 	return ( 1 - 2 * pY ) * tm * tm + 2 * pY * tm;	
-  ... 
+ 
   }
 
 

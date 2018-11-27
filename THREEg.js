@@ -1,4 +1,4 @@
-// THREEg.js ( rev 90.0 )
+// THREEg.js ( rev 98.0 )
 
 /**
  * @author hofk / http://threejs.hofk.de/
@@ -1511,7 +1511,7 @@ function morphVerticesMagicBox( time ) {
 	
 }
 			
-// ..................................... MagicSphere ..........................................
+// ..................................... Magic Sphere ..........................................
 
 function createMagicSphere( p ) {
 	
@@ -2291,6 +2291,404 @@ function morphVerticesMagicSphere( time ) {
 	
 }
 
+// ..................................... Labyrinth-3D-2D .......................................
+
+/*
+	icons design 3D
+	The characters on the keyboard have been chosen so that they roughly reflect the form.
+	
+	wall description
+	sides l f r b is left front right back, with floor and roof
+	
+	char sides
+	G	l f r b   can only be achieved by beaming
+	M	l f r
+	C	b l f
+	3	f r b
+	U	l b r
+	H	l r
+	:	f b
+	F	l f
+	7	f r
+	L	l b
+	J	b r
+	I	l 
+	1	r
+	-	f
+	.	b
+	
+	without walls
+	since extra character not possible on the wall
+	* roof and floor
+	^ roofless
+	v floorless
+	x roofless and floorless
+	
+	with four side walls but roofless and floorless
+	#
+	
+	//_____________________________________________
+	
+	// EXAMPLES:
+	
+	var design3D = [
+	// upper storey first
+	//23456789.......
+	[
+	'     M         G', // 1
+	'     H          ', // 2
+	'     H          ', // 3
+	'   F-*--7       ', // 4
+	'   I*7**1       ', // 5
+	' C:v*L.**:::7   ', // 6
+	'   L*...J   U   ', // 7
+	'    H           ', // 8
+	'    L::::3      '  // 9	
+	],[
+	'                ', // 1
+	'                ', // 2
+	'          G     ', // 3
+	'                ', // 4
+	'                ', // 5
+	'   #            ', // 6
+	'                ', // 7
+	'                ', // 8
+	'                '  // 9	
+	],[
+	'F::3            ', // 1
+	'H    F:::::7    ', // 2
+	'H    H     H    ', // 3
+	'H  F-*-7   H    ', // 4
+	'H  I****:::1    ', // 5
+	'L::x***1   H    ', // 6
+	'   I...J   H    ', // 7
+	'   H   F:7 L:::7', // 8
+	'   L:::J L:::::J'  // 9	
+	]];
+	
+	var materialIndex = [
+	// upper storey first
+	// px, nx, py, ny, pz, nz 
+	[ 0, 1, 2, 3, 4, 5 ], 
+	[ 0, 0, 1, 1, 2, 2 ],
+	[ 6, 7, 6, 7, 6, 7 ],
+	];
+	
+//--------------------------------------------------------------
+	
+	design 2D 
+	only icon + 
+	All the neighboring boxes are connected. There's no way out!
+	
+	var design2D = [  // will be converted to design 3D
+	' ++++++++++   ',
+	' +++  ++  ++  ',
+	' +++  +++     ',
+	'++ ++ ++++++++',
+	' +++++ + +   +',
+	'   +  ++ +++++',
+	'   ++++  +    '
+	];
+	
+	var materialIndex = [
+	// px, nx, py, ny, pz, nz 
+		0, 1, 2, 3, 4, 5 
+	];
+		
+*/
+
+function createLabyrinth( dim, design, m ) {
+/* parameters:  
+ dim: '2D' or '3D'
+ design : arays as in the examples above
+ m: arays for material index as in the examples above
+*/
+	g = this;  //  THREE.BufferGeometry() - non indexed BufferGeometry object from three.js
+	
+	g.dim = dim;
+	g.storeys = ( dim === '3D' ) ? design.length : 1;
+	
+	if ( dim === '3D' ) {
+		
+		g.design = design;
+		
+	} else {
+		
+		// convert design 2D style to 3D style
+		g.design = [];
+		g.design.push( [] ); // create a storey
+		var dRows = design.length;
+		var dCols;
+		var row;
+		
+		for( var f = 0; f < g.storeys; f ++ ) { 
+
+			for( var r = 0; r < dRows; r ++ ) {
+				
+				dCols = design[ r ].length;
+				row = '';
+				
+				for( var c = 0; c < dCols; c ++ ) {	
+				
+					row = row + convertDesign2D( design );
+							
+				}
+				
+				g.design[ 0 ].push( row );
+				
+			}
+	
+		} 
+		
+	}
+	
+	if ( dim === '3D' ) {
+		
+		g.m =  m 
+		
+	} else {
+		
+		g.m = [];
+		g.m.push( m ); // for storey 0
+	}
+	
+	g.buildLabyrinth = buildLabyrinth;
+	
+	g.buildLabyrinth();
+	
+		
+	function convertDesign2D( dsgn ) {
+	
+		var left = false;
+		var front = false;
+		var right = false;
+		var back = false;
+	
+		if ( dsgn[ r ][ c ] === '+' ) {
+			
+			if( c === 0 ) { left = true }	else { if( dsgn[ r ][ c-1 ] !== '+' ) { left = true } };
+			if( r === 0 ) { front = true }	else { if( dsgn[ r-1 ][ c ] !== '+' ) { front = true } };
+			if( c === dCols - 1 ) { right = true }	else { if( dsgn[ r ][ c+1 ] !== '+' ) { right = true } };
+			if( r === dRows - 1 ) { back = true }	else { if( dsgn[ r+1 ][ c ] !== '+' ) { back = true } };
+	
+			if ( left && front && right && back ) return 'G';
+			if ( left && front && right && !back ) return 'M';
+			if ( left && front && !right && back ) return 'C';
+			if ( !left && front && right && back ) return '3';
+			if ( left && !front && right && back ) return 'U';
+			if ( left && !front && right && !back ) return 'H';
+			if ( !left && front && !right && back ) return ':';
+			if ( left && front && !right && !back ) return 'F';
+			if ( !left && front && right && !back ) return '7';
+			if ( left && !front && !right && back ) return 'L';
+			if ( !left && !front && right && back ) return 'J';
+			if ( left && !front && !right && !back ) return 'I';
+			if ( !left && !front && right && !back ) return '1';
+			if ( !left && front && !right && !back ) return '-';
+			if ( !left && !front && !right && back ) return '.';
+			if ( !left && !front && !right && !back ) return '*';
+			
+		} else { 
+			// elseif ( dsgn[ r ][ c ] === '.' )  
+		return  ' ';  // String.fromCharCode(32); // space
+		
+		}	
+		
+	}
+	
+} 
+
+function buildLabyrinth( ) {
+
+	g = this;
+	
+	var s;
+	var icon;
+	var c1, f1, r1; // next column x, floor y, row z 
+	var planesPos = [];
+	var posIdx = 0; 
+	var planesUVs = [];
+	var uvIdx = 0;
+	var groupStart = 0;
+		
+	// count faces
+	g.faceCount = 0;
+	
+	for( var f = 0; f < g.storeys; f ++ ) {
+		
+		for( var r = 0; r < g.design[ f ].length; r ++ ) {
+			
+			for( var c = 0; c < g.design[ f ][ r ].length; c ++ ) {
+	
+				icon = g.design[ g.storeys - 1 - f ][ r ][ c ];
+				
+				if ( icon !== ' ' ) { countFaces( icon ) } 
+				
+			}		
+	
+		}
+	
+	}
+	
+	g.positions = new Float32Array( g.faceCount * 9 );
+	//g.normals = new Float32Array( g.faceCount * 9 );
+	g.uvs = new Float32Array( g.faceCount * 6 );  // uv's to positions
+	
+	g.addAttribute( 'position', new THREE.BufferAttribute( g.positions, 3 ) );
+	//g.addAttribute( 'normal', new THREE.BufferAttribute( g.normals, 3 ) );
+	g.addAttribute( 'uv', new THREE.BufferAttribute( g.uvs, 2 ) );
+	
+	// create faces
+	for( var f = 0; f < g.storeys; f ++ ) {
+		
+		for( var r = 0; r < g.design[ f ].length; r ++ ) {
+			
+			for( var c = 0; c < g.design[ f ][ r ].length; c ++ ) {
+	
+				icon = g.design[ g.storeys - 1 - f ][ r ][ c ];
+				
+				if ( icon !== ' ' ) {
+					
+					c1 = c + 1;
+					f1 = f + 1;
+					r1 = r + 1;
+					
+					createBox( icon )
+				
+				} 					
+				
+			}		
+	
+		}
+	
+	}
+	
+	function countFaces( icon ) {
+
+		switch ( icon ) {
+			case 'G':
+				g.faceCount += 12;
+				break;
+			case 'M':   
+			case 'C': 						
+			case '3':
+			case 'U':
+				g.faceCount += 10;
+				break;
+			case 'H': 	
+			case ':': 
+			case 'F': 
+			case '7': 
+			case 'L': 
+			case 'J':
+			case '#': // only 4 side walls
+				g.faceCount += 8;
+				break;		
+			case 'I': 
+			case '1': 
+			case '-':
+			case '.': 
+				g.faceCount += 6;
+			break;
+			case '*':
+				g.faceCount += 4;
+			break;			
+			case '^':
+			case 'v':
+				g.faceCount += 2;
+			break;
+			// case 'x': 
+			//  g.faceCount += 0
+			//  break;							
+			default: 
+			//  g.faceCount += 0
+		}
+
+	}
+	
+	function createBox( icon ) {
+		
+		planesPos = [];
+		planesUVs = [];
+		
+		s = g.storeys - 1 - f; // upper storey first
+		
+		switch ( icon ) {
+			case 'G': box_G( );     break;
+			case 'M': box_M( );     break;
+			case 'C': box_C( );     break;
+			case '3': box_3( );     break;
+			case 'U': box_U( );     break;
+			case 'H': box_H( );     break;
+			case ':': box_colon( ); break;
+			case 'F': box_F( );     break;
+			case '7': box_7( );     break;
+			case 'L': box_L( );     break;
+			case 'J': box_J( );     break;
+			case 'I': box_I( );     break;
+			case '1': box_1( );     break;
+			case '-': box_minus( ); break;
+			case '.': box_dot( );   break;
+			case '*': box_multi( ); break;
+			case '^': box_caret( ); break;
+			case 'v': box_v( );     break;
+			case 'x': box_x( );     break;
+			case '#': box_sharp( ); break;
+			default: box_x( );
+		}
+		
+		for ( let i = 0; i < planesPos.length; i ++ ) { 
+			
+			g.positions[ posIdx + i ] = planesPos[ i ];
+				
+		}
+		
+		posIdx += planesPos.length;
+		
+		for ( let i = 0; i < planesUVs.length; i ++ ) { 
+			
+			g.uvs[ uvIdx + i ] = planesUVs[ i ];
+				
+		}
+		
+		uvIdx += planesUVs.length;
+		
+	}	
+		
+	// function pushUVs( ) { planesUVs.push( 1,0, 1,1, 0,1,  1,0, 0,1, 0,0 ) } // outside
+	function pushUVs( ) { planesUVs.push( 0,0, 0,1, 1,1,  0,0, 1,1, 1,0 ) }    // inside
+	function groupAdd( m ) { g.addGroup( groupStart, 6, m ); groupStart += 6 }
+	
+	function px( ) { planesPos.push( c1,f,r, c1,f1,r, c1,f1,r1,   c1,f,r, c1,f1,r1, c1,f,r1 ); pushUVs( ); groupAdd( g.m[ s ][ 0 ] ) }
+	function nx( ) { planesPos.push( c,f,r1, c,f1,r1, c,f1,r,   c,f,r1, c,f1,r, c,f,r ); pushUVs( ); groupAdd( g.m[ s ][ 1 ] ) }
+	function py( ) { planesPos.push( c,f1,r1, c1,f1,r1, c1,f1,r,   c,f1,r1, c1,f1,r, c,f1,r ); pushUVs( ); groupAdd( g.m[ s ][ 2 ] ) }
+	function ny( ) { planesPos.push( c,f,r, c1,f,r, c1,f,r1,   c,f,r, c1,f,r1, c,f,r1 ); pushUVs( ); groupAdd( g.m[ s ][ 3 ] ) }
+	function pz( ) { planesPos.push( c1,f,r1, c1,f1,r1, c,f1,r1,   c1,f,r1, c,f1,r1, c,f,r1 ); pushUVs( ); groupAdd( g.m[ s ][ 4 ] ) }
+	function nz( ) { planesPos.push( c,f,r, c,f1,r, c1,f1,r,   c,f,r, c1,f1,r, c1,f,r ); pushUVs( ); groupAdd( g.m[ s ][ 5 ] ) }
+	
+	function box_G( ) { px( ); nx( ); py( ); ny( ); pz( ); nz( ) }
+	function box_M( ) { px( ); nx( ); py( ); ny( ); nz( ) }
+	function box_C( ) { nx( ); py( ); ny( ); pz( ); nz( ) }
+	function box_3( ) { px( ); py( ); ny( ); pz( ); nz( ) }
+	function box_U( ) { px( ); nx( ); py( ); ny( ); pz( ) }
+	function box_H( ) { px( ); nx( ); py( ); ny( ) }
+	function box_colon( ) { py( ); ny( ); pz( ); nz( ) }
+	function box_F( ) { nx( ); py( ); ny( ); nz( ) }
+	function box_7( ) { px( ); py( ); ny( );  nz( ) }
+	function box_L( ) { nx( ); py( ); ny( ); pz( ) }
+	function box_J( ) { px( ); py( ); ny( ); pz( ) }
+	function box_I( ) { nx( ); py( ); ny( ) }
+	function box_1( ) { px( ); py( ); ny( ) }
+	function box_minus( ) { py( ); ny( ); nz( ) }
+	function box_dot( ) { py( ); ny( ); pz( ) }
+	function box_multi( ) { py( ); ny( ) };
+	function box_caret( ) { ny( ) }
+	function box_v( ) { py( ) }
+	function box_x( ) {  }
+	function box_sharp( ) { px( ); nx( ); pz( ); nz( ) }
+	
+}
+
 // ..................................... Helper ...............................................
 
 function vertexFaceNumbersHelper( mesh, mode, size, color ) {
@@ -2492,6 +2890,9 @@ exports.morphVerticesMagicBox =	morphVerticesMagicBox;
 exports.createMagicSphere = createMagicSphere;
 exports.buildMagicSphere = buildMagicSphere;
 exports.morphVerticesMagicSphere =	morphVerticesMagicSphere;
+
+exports.createLabyrinth = createLabyrinth;
+exports.buildLabyrinth = buildLabyrinth;
 
 exports.vertexFaceNumbersHelper = vertexFaceNumbersHelper;
 

@@ -290,11 +290,11 @@ further information:
   }
 
  ``` 
- 
  ---
 
 
-Easy to design 3D and 2D Labyrinth Geometry is the third geometry in THREEg. It is realized as one non-indexed BufferGeometry. Multi material is supported.
+Easy to design 3D and 2D Labyrinth Geometry is the third geometry in THREEg.
+It is realized as one non-indexed BufferGeometry. Multi material is supported.
 
 
 ```javascript
@@ -372,7 +372,7 @@ parameters:
 */
 
 //--------------------------------------------------------------
-// EXAMPLES:
+/#### EXAMPLES:
 
 var design3D = [
 	// upper storey first

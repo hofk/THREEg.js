@@ -366,14 +366,19 @@ parameters:
 	var design2D = [  // will be converted to design 3D
 	' ++++++++++   ',
 	' +++  ++  ++  ',
-	 // ...
+	
 	];
 		
 */
 
 //--------------------------------------------------------------
-/#### EXAMPLES:
 
+``` 
+ 
+#### EXAMPLES:
+
+```javascript
+ 
 var design3D = [
 	// upper storey first
 	//23456789.......

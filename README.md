@@ -290,3 +290,154 @@ further information:
   }
 
  ``` 
+ 
+ ---
+
+
+Easy to design 3D and 2D Labyrinth Geometry is the third geometry in THREEg. It is realized as one non-indexed BufferGeometry. Multi material is supported.
+
+
+```javascript
+	geometry = new THREE.BufferGeometry();
+	geometry.createLabyrinth = THREEg.createLabyrinth; // insert the methode from THREEg.js
+	geometry.createLabyrinth(  dim, design, m ); // apply the methode
+	
+	// mesh
+	mesh = new THREE.Mesh( geometry, materials );
+        scene.add( mesh );
+
+ ``` 
+
+parameters:  
+ dim: '2D' or '3D'
+ design : arays as in the examples
+ m: arays for material index as in the examples
+
+
+ Include: <script src="THREEg.js"></script>
+ 
+ 
+
+```javascript
+// Description of the design in THREEg.js section Labyrinth-3D-2D 
+
+// ..................................... Labyrinth-3D-2D .......................................
+
+/*
+	icons design 3D
+	The characters on the keyboard have been chosen so that they roughly reflect the form.
+	
+	wall description
+	sides l f r b is left front right back, with floor and roof
+	
+	char sides
+	G	l f r b   can only be achieved by beaming
+	M	l f r
+	C	b l f
+	3	f r b
+	U	l b r
+	H	l r
+	:	f b
+	F	l f
+	7	f r
+	L	l b
+	J	b r
+	I	l 
+	1	r
+	-	f
+	.	b
+	
+	without walls
+	since extra character not possible on the wall
+	* roof and floor
+	^ roofless
+	v floorless
+	x roofless and floorless
+	
+	with four side walls but roofless and floorless
+	#
+	
+//--------------------------------------------------------------
+	
+	design 2D 
+	only icon + 
+	All the neighboring boxes are connected. There's no way out!
+	
+	var design2D = [  // will be converted to design 3D
+	' ++++++++++   ',
+	' +++  ++  ++  ',
+	 // ...
+	];
+		
+*/
+
+//--------------------------------------------------------------
+// EXAMPLES:
+
+var design3D = [
+	// upper storey first
+	//23456789.......
+	[
+	'     M         G', // 1
+	'     H          ', // 2
+	'     H          ', // 3
+	'   F-*--7       ', // 4
+	'   I*7**1       ', // 5
+	' C:v*L.**:::7   ', // 6
+	'   L*...J   U   ', // 7
+	'    H           ', // 8
+	'    L::::3      '  // 9	
+	],[
+	'                ', // 1
+	'                ', // 2
+	'          G     ', // 3
+	'                ', // 4
+	'                ', // 5
+	'   #            ', // 6
+	'                ', // 7
+	'                ', // 8
+	'                '  // 9	
+	],[
+	'F::3            ', // 1
+	'H    F:::::7    ', // 2
+	'H    H     H    ', // 3
+	'H  F-*-7   H    ', // 4
+	'H  I****:::1    ', // 5
+	'L::x***1   H    ', // 6
+	'   I...J   H    ', // 7
+	'   H   F:7 L:::7', // 8
+	'   L:::J L:::::J'  // 9	
+	]];
+	
+	// labyrinth material index
+	var materialIndex3D = [
+	// upper storey first
+	// px, nx, py, ny, pz, nz 
+	[ 0, 1, 2, 3, 4, 5 ], 
+	[ 0, 0, 1, 1, 2, 2 ],
+	[ 6, 7, 6, 7, 6, 7 ],
+	];
+
+//---------------------------------------------------------
+		
+	var design2D = [  // will be converted to design 3D
+	' ++++++++++   ',
+	' +++  ++  ++  ',
+	' +++  +++     ',
+	'++ ++ ++++++++',
+	' +++++ + +   +',
+	'   +  ++ +++++',
+	'   ++++  +    '
+	];
+	
+	var materialIndex2D = [
+	
+	// px, nx, py, ny, pz, nz 
+	0, 1, 2, 3, 4, 5 
+	
+	];
+
+
+ ``` 
+ 
+  

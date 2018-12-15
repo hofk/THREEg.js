@@ -12,8 +12,10 @@ For more efficiency.
 Each single geometry section between ..... name ...... can be deleted.
 
 ---
+ 
+ ..................................... Magic Sphere .............................................
 
-The first geometry in THREEg  is an enlarged sphere. 
+An enlarged sphere. 
 It is made up of eight parts. Multi material is supported.
 
 ```javascript
@@ -103,7 +105,9 @@ Parameters briefly explained in THREEg.js:
 ```
 ---
 
-The second geometry in THREEg  is an enlarged box. 
+..................................... Magic Box ................................................
+
+An enlarged box. 
 It is made up of 26 parts. Multi material is supported.
 
 ```javascript
@@ -296,8 +300,9 @@ further information:
 
  ---
 
+..................................... Labyrinth-3D-2D ..........................................
 
-Easy to design 3D and 2D Labyrinth Geometry is the third geometry in THREEg.
+Easy to design 3D and 2D Labyrinth Geometry.
 It is realized as one non-indexed BufferGeometry. Multi material is supported.
 
 
@@ -452,7 +457,9 @@ var design3D = [
  
  ---
 
-Easy to design Line Grid Geometry is the fourth geometry in THREEg.
+..................................... Line Grid ...................................................
+
+Easy to design Line Grid Geometryg.
 
 The line grid can either be created in the xy-plane, or you can design grids on the sides of a box.
 

@@ -1,6 +1,6 @@
 # THREEg.js
 
-# three.js addon to create special or extended geometries.
+#### A three.js addon to create special or extended geometries.
 
 The addon generates non indexed BufferGeometries. This allows an explosion representation.
 
@@ -10,7 +10,7 @@ The addon generates non indexed BufferGeometries. This allows an explosion repre
 
 For more efficiency.
 
-Each single geometry section between ............... name ............... can be deleted.
+Each single geometry section between ............................. name ............................. can be deleted.
 
 
 ---
@@ -170,7 +170,7 @@ Parameters briefly explained in THREEg.js:
 			    
   ```
  
-further information:
+*further information:*
 
 // contourmode 'rounding' 
 		
@@ -385,7 +385,6 @@ parameters:
 
 ``` 
 
----
  
 #### EXAMPLES:
 
@@ -534,7 +533,6 @@ Include: <script src="THREEg.js"></script>
 
 ``` 
 
----
  
 #### EXAMPLES:
 

@@ -1,4 +1,4 @@
-// THREEg.js ( rev 98.0 )
+// THREEg.js ( rev 99.0 )
 
 /**
  * @author hofk / http://threejs.hofk.de/
@@ -14,7 +14,12 @@
 
 var g;	// THREE.BufferGeometry (non indexed)
 
-// ..................................... Magic Box ............................................
+//#################################################################################################
+
+//
+//       Each single section between ..... name ...... can be deleted.
+//
+// ..................................... Magic Box ................................................
 
 function createMagicBox( p ) {
 	
@@ -1510,8 +1515,12 @@ function morphVerticesMagicBox( time ) {
 	}
 	
 }
-			
-// ..................................... Magic Sphere ..........................................
+
+exports.createMagicBox = createMagicBox;
+exports.buildMagicBox = buildMagicBox;
+exports.morphVerticesMagicBox =	morphVerticesMagicBox;		
+	
+// ..................................... Magic Sphere .............................................
 
 function createMagicSphere( p ) {
 	
@@ -2291,9 +2300,20 @@ function morphVerticesMagicSphere( time ) {
 	
 }
 
-// ..................................... Labyrinth-3D-2D .......................................
+exports.createMagicSphere = createMagicSphere;
+exports.buildMagicSphere = buildMagicSphere;
+exports.morphVerticesMagicSphere =	morphVerticesMagicSphere;
 
-/*
+// ..................................... Labyrinth-3D-2D ..........................................
+
+function createLabyrinth( dim, design, m ) {
+
+	/* parameters:  
+	dim: '2D' or '3D'
+	design : arays as in the examples 
+	m: arays for material index as in the examples 
+
+
 	icons design 3D
 	The characters on the keyboard have been chosen so that they roughly reflect the form.
 	
@@ -2374,7 +2394,7 @@ function morphVerticesMagicSphere( time ) {
 	[ 6, 7, 6, 7, 6, 7 ],
 	];
 	
-//--------------------------------------------------------------
+	//--------------------------------------------------------------
 	
 	design 2D 
 	only icon + 
@@ -2395,14 +2415,8 @@ function morphVerticesMagicSphere( time ) {
 		0, 1, 2, 3, 4, 5 
 	];
 		
-*/
+	*/
 
-function createLabyrinth( dim, design, m ) {
-/* parameters:  
- dim: '2D' or '3D'
- design : arays as in the examples above
- m: arays for material index as in the examples above
-*/
 	g = this;  //  THREE.BufferGeometry() - non indexed BufferGeometry object from three.js
 	
 	g.dim = dim;
@@ -2689,7 +2703,486 @@ function buildLabyrinth( ) {
 	
 }
 
-// ..................................... Helper ...............................................
+exports.createLabyrinth = createLabyrinth;
+exports.buildLabyrinth = buildLabyrinth;
+
+// ..................................... Line Grid ...................................................
+
+function createLineGrid( design, multiMaterial, width, height, depth ) {  
+		// multiMaterial, width, height, depth are optional, if not available the design dimension is used
+	
+	// multiMaterial: mode 'align' (2 materials) or 'side' (default, up to 6 materials)
+	
+	/*________________________________________________
+	
+	design: array :
+	
+	icons
+	The characters on the keyboard have been chosen so that they roughly reflect the form.
+	
+	description
+	lines l f r b is left front right back
+	
+	char lines
+	G	l f r b		// compatible to labyrinth design
+	M	l f r
+	C	b l f
+	3	f r b
+	U	l b r
+	H	l r
+	:	f b
+	F	l f
+	7	f r
+	L	l b
+	J	b r
+	I	l 
+	1	r
+	-	f
+	.	b
+	
+	special signs
+	#	Grid with complete squares, equals G
+	
+	+	All the neighboring squares are connected.
+	__________________________________________________
+	
+	EXAMPLES
+	
+	Note: Half the length of the first string on each plane determines the center of the design.
+	
+	var designPlaneNo1 =[	// is created on the x-y plane
+	'        +        ',// spaces after + -->  length of first row, center of design
+	'        +  ',
+	'    .F7.-.F7. ', 
+	'    I.  G  .1 ',
+	'    I L. .J 1 ',
+	'    I   H   1 ',
+	'## : U C 3 M : ## ',
+	'    I   H   1 ',
+	'    I F- -7 1 ',
+	'    I-  H  -1 ',
+	'    -LJ-.-LJ- ',
+	'        +',
+	'        +'
+	];
+	
+	var designBoxNo2 = [
+	
+	[], // no px
+	[], // no nx
+	[   // py
+	'+++++++',
+	'++   ++',
+	'+ 7 F +',
+	'  1 I  ',
+	'+ J L +',
+	'++   ++',
+	'++   ++'
+	],
+	[  // ny
+	'### + ###',
+	'## +++  #',
+	'#  + +  #',
+	'#   H   #',
+	'   : :   ',
+	'#   H   #',
+	'#  L.J  #',
+	'##     ##',
+	'###   ###'
+	],
+	[   // pz
+	'+++++++++',
+	'+++###+++',
+	'##     ##',
+	'##  +  ##',
+	'##     ##',
+	'+++ H +++',
+	'+++###+++'
+	]   // no nz
+	];
+	_______________________________________________*/
+	
+	g = this;  //  THREE.BufferGeometry() - geometry object from three.js
+	
+	g.multiMaterial = multiMaterial || 'side'; // 'align'
+	g.plane = false;
+	
+	var icon, bin, rows, cols;
+	var charRow, binRow;
+	
+	if ( Array.isArray( design[ 0 ] ) ) {
+		
+		g.dsgn = design;
+		
+	} else {
+		
+	 	g.dsgn = [ [], [], [], [], design ]; // like pz but uses first material
+		g.plane = true;
+		
+	}
+	
+	g.sides = g.dsgn.length;
+	
+	g.w2 = 0; // width / 2
+	g.h2 = 0; // height / 2
+	g.d2 = 0; //depth / 2
+	
+	// convert design to binary form, count lines
+	
+	g.convDsgn = [];
+	g.binDsgn = [];
+	g.lines = []; // lines per side (cumulative)
+	g.lineCount = 0;
+
+	// strings split 
+	
+	for( var s = 0; s < g.sides; s ++ ) {
+		
+		g.convDsgn.push( [] );
+		rows = g.dsgn[ s ].length;
+		
+		if ( rows !== 0  ) {
+			
+			for( var r = 0; r < g.dsgn[ s ].length; r ++ ) {
+				
+				charRow = [];
+				cols = g.dsgn[ s ][ r ].length;
+				
+				for( var c = 0; c < cols; c ++ ) {
+					
+					charRow.push( g.dsgn[ s ][ r ][ c ] );
+					
+				}
+				
+				g.convDsgn[ s ].push( charRow );
+				
+			}
+			
+		}
+		
+	}
+	
+	for( var s = 0; s < g.sides; s ++ ) {
+		
+		g.binDsgn.push( [] );
+		rows = g.convDsgn[ s ].length;
+		
+		if ( rows !== 0  ) {
+			
+			// // replace icon '+'
+			for( var r = 0; r < g.convDsgn[ s ].length; r ++ ) {
+				
+				binRow = [];
+				cols = g.convDsgn[ s ][ r ].length;
+				
+				for( var c = 0; c < cols; c ++ ) {
+					
+					if ( g.convDsgn[ s ][ r ][ c ] === '+' ) g.convDsgn[ s ][ r ][ c ] = convertPlus( s );
+					
+					binRow.push( toBinary( g.convDsgn[ s ][ r ][ c ] ) ); // convert to binary
+					
+				}
+				
+				g.binDsgn[ s ].push( binRow );
+				
+				// determine  width, height,  depth
+				if ( width === undefined && ( s === 0 || s === 1 ) && r === 0 ) { g.w2 = Math.max( g.w2, cols ); }
+				if ( height === undefined  && ( s === 2 || s === 3 ) && r === 0 ) { g.h2 = Math.max( g.h2, cols ); }
+				if ( depth === undefined && ( s === 4 || s === 5 ) && r === 0 ) { g.d2 = Math.max( g.d2, cols ); }
+				
+			}
+			
+			// delete double lines, uses 0bLeftFrontRightBack
+			
+			for( let r = 1; r < rows; r ++ ) {
+				
+				cols = g.binDsgn[ s ][ r ].length;
+				
+				for( let c = 0; c < cols; c ++ ) {
+					
+					
+					g.binDsgn[ s ][ r ][ c ] = ( ( g.binDsgn[ s ][ r - 1 ][ c ] & 0b0001 ) << 2 ) ^ g.binDsgn[ s ][ r ][ c ];
+					
+				}
+				
+			}
+			
+			for( let r = 0; r < rows; r ++ ) {
+				
+				cols = g.binDsgn[ s ][ r ].length;
+				
+				for( let c = 1; c < cols; c ++ ) {
+					
+					g.binDsgn[ s ][ r ][ c ] = ( ( g.binDsgn[ s ][ r ][ c - 1 ] & 0b0010 ) << 2 ) ^ g.binDsgn[ s ][ r ][ c ];
+					
+				}
+				
+			}
+			
+			for( let r = 0; r < rows; r ++ ) {
+			
+				cols = g.binDsgn[ s ][ r ].length;
+				
+				for( let c = 0; c < cols; c ++ ) {
+					
+					bin = g.binDsgn[ s ][ r ][ c ];
+					
+					g.lineCount += ( ( bin & 0b1000 ) >> 3 ) + ( ( bin & 0b0100 ) >> 2 ) + ( ( bin & 0b0010 ) >> 1 ) + ( bin & 0b0001 );
+					
+				}
+				
+			}
+			
+		}
+		
+		g.lines.push( g.lineCount ); // cumulative also for empty sides
+		
+	}
+	
+	g.w2 = width === undefined ? g.w2 / 2 : width / 2;
+	g.h2 = height === undefined ? g.h2 / 2 : height / 2;
+	g.d2 = depth === undefined ?  g.d2 / 2 : depth / 2;
+	
+	g.d2 = g.plane ? 0 : g.d2;
+	
+	design = [];     //......................
+	g.dsgn = [];     //...... DELETE ........
+	g.convDsgn = []; //......................
+	
+	g.buildLineGrid = buildLineGrid;
+	g.buildLineGrid();
+	
+	// detail functions
+	
+	function getIcon( l, f, r, b ) { 
+		
+		// left, front, right, back
+		
+		if ( l && f && r && b ) return 'G';
+		if ( l && f && r && !b ) return 'M';
+		if ( l && f && !r && b ) return 'C';
+		if ( !l && f && r && b ) return '3';
+		if ( l && !f && r && b ) return 'U';
+		if ( l && !f && r && !b ) return 'H';
+		if ( !l && f && !r && b ) return ':';
+		if ( l && f && !r && !b ) return 'F';
+		if ( !l && f && r && !b ) return '7';
+		if ( l && !f && !r && b ) return 'L';
+		if ( !l && !f && r && b ) return 'J';
+		if ( l && !f && !r && !b ) return 'I';
+		if ( !l && !f && r && !b ) return '1';
+		if ( !l && f && !r && !b ) return '-';
+		if ( !l && !f && !r && b ) return '.';
+		if ( !l && !f && !r && !b ) return ' '; // space
+		
+	}
+	
+	function convertPlus( s ) {
+		
+		var left = false;
+		var front = false;
+		var right = false;
+		var back = false;
+		
+		if( c === 0 ) { left = true } else { if( g.dsgn[ s ][ r ][ c-1 ] !== '+' ) { left = true } };
+		if( r === 0 ) { front = true } else { if( g.dsgn[ s ][ r-1 ][ c ] !== '+' ) { front = true } };
+		if( c === cols - 1 ) { right = true } else { if( g.dsgn[ s ][ r ][ c+1 ] !== '+' ) { right = true } };
+		if( r === rows - 1 ) { back = true } else { if( g.dsgn[ s ][ r+1 ][ c ] !== '+' ) { back = true } };
+		
+		return getIcon( left, front, right, back );
+		
+	}
+	
+	function toBinary( icon ) {
+		
+		switch ( icon ) {
+			
+			// bits for left front right back
+			case '+': return 0b0000; break; // '+' area limits are determined later
+			case 'G': 						// compatible to labyrinth design
+			case '#': return 0b1111; break;
+			case 'M': return 0b1110; break;
+			case 'C': return 0b1101; break;
+			case '3': return 0b0111; break;
+			case 'U': return 0b1011; break;
+			case 'H': return 0b1010; break;
+			case ':': return 0b0101; break;
+			case 'F': return 0b1100; break;
+			case '7': return 0b0110; break;
+			case 'L': return 0b1001; break;
+			case 'J': return 0b0011; break;
+			case 'I': return 0b1000; break;
+			case '1': return 0b0010; break;
+			case '-': return 0b0100; break;
+			case '.': return 0b0001; break;
+			case ' ': return 0b0000; break;  // not affected
+			
+		}
+		
+	}
+	
+}
+
+function buildLineGrid( ) {
+	
+	var rows, cols;
+	var bin;
+	var sign;
+	var horizPos;
+	var vertiPos;
+	var horizUVs;
+	var vertiUVs;
+	var posIdx = 0;
+	var uvIdx = 0;
+	var i0, i1, j0, j1, p0, p1, q0, q1;
+	
+	g.prevLineCount = 0;
+	
+	g.positions = new Float32Array( g.lineCount * 6	);
+	g.uvs = new Float32Array( g.lineCount * 4 );  // uv's to positions
+	g.addAttribute( 'position', new THREE.BufferAttribute( g.positions, 3 ) );
+	g.addAttribute( 'uv', new THREE.BufferAttribute( g.uvs, 2 ) );
+	
+	// create lines
+	
+	for( var s = 0; s < g.sides; s ++ ) {
+		
+		if ( g.binDsgn[ s ].length !== 0  ) {
+			
+			rows = g.binDsgn[ s ].length;
+			cols = g.binDsgn[ s ][ 0 ].length;
+			
+			sign = ( s === 0 || s === 2 || s === 5 ) ? -1 : 1;
+			
+			for( var r = 0; r < rows; r ++ ) {
+				
+				for( var c = 0; c < g.binDsgn[ s ][ r ].length; c ++ ) {
+					
+					bin = g.binDsgn[ s ][ r ][ c ];
+					
+					if ( bin !== 0b0000 ) {
+						
+						// positions
+						i0 = sign * ( c - cols / 2 );
+						i1 = i0 + sign;
+						j0 = -r + rows / 2;
+						j1 = j0 - 1;
+						
+						// uv's
+						p0 = c / cols;
+						p1 = ( c + 1 ) / cols;
+						q0 = ( rows - r - 1) / rows;
+						q1 = ( rows - r ) / rows;
+						
+						createLines( bin );
+						
+					}
+					
+				}
+				
+			}
+			
+			if ( g.multiMaterial === 'side') {
+				
+				g.addGroup( g.prevLineCount * 2, ( g.lines[ s ] - g.prevLineCount ) * 2, g.plane ? 0 : s );
+				g.prevLineCount = g.lines[ s ];
+				
+			}
+			
+		}
+		
+	}
+	
+	// detail functions
+	
+	function createLines( bin ) {
+		
+		horizPos = [];
+		vertiPos = [];
+		horizUVs = [];
+		vertiUVs = [];
+		
+		if ( ( bin & 0b1000 ) !== 0 ) { left( s ) } 
+		if ( ( bin & 0b0100 ) !== 0 ) { front( s ) }
+		if ( ( bin & 0b0010 ) !== 0 ) { right( s ) }
+		if ( ( bin & 0b0001 ) !== 0 ) { back( s ) }
+		
+		// copy positions into Buffer // multi material 'align' -> add group  (material 0, 1)
+		
+		for ( let i = 0; i < horizPos.length; i ++ ) { g.positions[ posIdx + i ] = horizPos[ i ]; }
+		
+		if ( g.multiMaterial === 'align') { g.addGroup( posIdx / 3, horizPos.length / 3, 0 ); }
+		
+		posIdx += horizPos.length;
+		
+		for ( let i = 0; i < vertiPos.length; i ++ ) { g.positions[ posIdx + i ] = vertiPos[ i ]; }
+		
+		if ( g.multiMaterial === 'align') { g.addGroup( posIdx / 3, vertiPos.length / 3, 1 ); }
+		
+		posIdx += vertiPos.length;
+		
+		// copy  uv's into Buffer
+		
+		for ( let i = 0; i < horizUVs.length; i ++ ) { g.uvs[ uvIdx + i ] = horizUVs[ i ]; }
+		
+		uvIdx += horizUVs.length;
+		
+		for ( let i = 0; i < vertiUVs.length; i ++ ) { g.uvs[ uvIdx + i ] = vertiUVs[ i ]; }
+		
+		uvIdx += vertiUVs.length;
+		
+	}
+	
+	function left( s ) {
+		switch ( s ) {
+			case 0: vertiPos.push( g.w2,j0,i0, g.w2,j1,i0 );   vertiUVs.push( q0,p0,q1,p0 ); break;// px
+			case 1: vertiPos.push( -g.w2,j0,i0, -g.w2,j1,i0 ); vertiUVs.push( q0,p0,q1,p0 ); break;// nx
+			case 2: vertiPos.push( i0,g.h2,j0, i0,g.h2,j1 );   vertiUVs.push( p0,q0,p0,q1 ); break;// py
+			case 3: vertiPos.push( i0,-g.h2,j0, i0,-g.h2,j1 ); vertiUVs.push( p0,q0,p0,q1 ); break;// ny
+			case 4: vertiPos.push( i0,j0,g.d2, i0,j1,g.d2 );   vertiUVs.push( p0,q0,p0,q1 ); break;// pz
+			case 5: vertiPos.push( i0,j0,-g.d2, i0,j1,-g.d2 ); vertiUVs.push( p0,q0,p0,q1 ); break;// nz
+		}
+	}
+	
+	function front( s ) {
+		switch ( s ) {
+			case 0: horizPos.push( g.w2,j0,i0, g.w2,j0,i1 );   horizUVs.push( q0,p0,q0,p1 ); break;// px
+			case 1: horizPos.push( -g.w2,j0,i0, -g.w2,j0,i1 ); horizUVs.push( q0,p0,q0,p1 ); break;// nx
+			case 2: horizPos.push( i0,g.h2,j0, i1,g.h2,j0 );   horizUVs.push( p0,q0,p1,q0 ); break;// py
+			case 3: horizPos.push( i0,-g.h2,j0, i1,-g.h2,j0 ); horizUVs.push( p0,q0,p1,q0 ); break;// ny
+			case 4: horizPos.push( i0,j0,g.d2, i1,j0,g.d2 );   horizUVs.push( p0,q0,p1,q0 ); break;// pz
+			case 5: horizPos.push( i0,j0,-g.d2, i1,j0,-g.d2 ); horizUVs.push( p0,q0,p1,q0 ); break;// nz
+		}
+	}
+	
+	function right( s ) {
+		switch ( s ) {
+			case 0: vertiPos.push( g.w2,j0,i1, g.w2,j1,i1 );   vertiUVs.push( q0,p1,q1,p1 ); break;// px
+			case 1: vertiPos.push( -g.w2,j0,i1, -g.w2,j1,i1 ); vertiUVs.push( q0,p1,q1,p1 ); break;// nx
+			case 2: vertiPos.push( i1,g.h2,j0, i1,g.h2,j1 );   vertiUVs.push( p1,q0,p1,q1 ); break;// py
+			case 3: vertiPos.push( i1,-g.h2,j0, i1,-g.h2,j1 ); vertiUVs.push( p1,q0,p1,q1 ); break;// ny
+			case 4: vertiPos.push( i1,j0,g.d2, i1,j1,g.d2 );   vertiUVs.push( p1,q0,p1,q1 ); break;// pz
+			case 5: vertiPos.push( i1,j0,-g.d2, i1,j1,-g.d2 ); vertiUVs.push( p1,q0,p1,q1 ); break;// nz
+		}
+	}
+	
+	function back( s ) {
+			switch ( s ) {
+			case 0: horizPos.push( g.w2,j1,i0, g.w2,j1,i1 );   horizUVs.push( q1,p0,q1,p1 ); break;// px
+			case 1: horizPos.push( -g.w2,j1,i0, -g.w2,j1,i1 ); horizUVs.push( q1,p0,q1,p1 ); break;// nx
+			case 2: horizPos.push( i0,g.h2,j1, i1,g.h2,j1 );   horizUVs.push( p0,q1,p1,q1 ); break;// py
+			case 3: horizPos.push( i0,-g.h2,j1, i1,-g.h2,j1 ); horizUVs.push( p0,q1,p1,q1 ); break;// ny
+			case 4: horizPos.push( i0,j1,g.d2, i1,j1,g.d2 );   horizUVs.push( p0,q1,p1,q1 ); break;// pz
+			case 5: horizPos.push( i0,j1,-g.d2, i1,j1,-g.d2 ); horizUVs.push( p0,q1,p1,q1 ); break;// nz
+		}
+	}
+	
+}
+
+exports.createLineGrid = createLineGrid;
+exports.buildLineGrid = buildLineGrid;
+
+// ..................................... Helper ...................................................
 
 function vertexFaceNumbersHelper( mesh, mode, size, color ) {
 	
@@ -2883,18 +3376,11 @@ function vertexFaceNumbersHelper( mesh, mode, size, color ) {
 	
 }
 
-exports.createMagicBox = createMagicBox;
-exports.buildMagicBox = buildMagicBox;
-exports.morphVerticesMagicBox =	morphVerticesMagicBox;
-
-exports.createMagicSphere = createMagicSphere;
-exports.buildMagicSphere = buildMagicSphere;
-exports.morphVerticesMagicSphere =	morphVerticesMagicSphere;
-
-exports.createLabyrinth = createLabyrinth;
-exports.buildLabyrinth = buildLabyrinth;
-
 exports.vertexFaceNumbersHelper = vertexFaceNumbersHelper;
+
+// ......................................   -   ..................................................
+
+//#################################################################################################
 
 Object.defineProperty(exports, '__esModule', { value: true });
 

@@ -6,6 +6,10 @@ The addon generates non indexed BufferGeometries. This allows an explosion repre
 
 @author hofk / http://sandbox.threejs.hofk.de/
  or http://sandboxthreeg.threejs.hofk.de/
+ 
+
+For more efficiency.
+Each single geometry section between ..... name ...... can be deleted.
 
 ---
 
@@ -470,7 +474,10 @@ If the design results in double lines at one position, the surplus line is elimi
   optional are
   
 multi material:  mode 'align' (2 materials) or 'side' (default, up to 6 materials)
-width, height, depth: For a box.
+
+width, height, depth:
+
+  For a box.
 
 The size of the box is determined by the design by default, but can also be specified as required.
 The length of the first line in the design of each side is decisive for the centering of the design. You can easily change the centering by using blanks at the beginning and end.

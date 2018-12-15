@@ -310,8 +310,8 @@ It is realized as one non-indexed BufferGeometry. Multi material is supported.
 
 parameters:  
  dim: '2D' or '3D'
- design : arays as in the examples
- m: arays for material index as in the examples
+ design: arrays as in the examples
+ m: arrays for material index as in the examples
 
 
  Include: <script src="THREEg.js"></script>
@@ -446,4 +446,133 @@ var design3D = [
 
  ``` 
  
+ ---
+
+Easy to design Line Grid Geometry is the fourth geometry in THREEg.
+
+The line grid can either be created in the xy-plane, or you can design grids on the sides of a box.
+
+```javascript
+
+var gridGeometry = new THREE.BufferGeometry( );
+gridGeometry.createLineGrid = THREEg.createLineGrid;
+gridGeometry.createLineGrid( designGrid, multi material, width, height, depth );
+var grid = new THREE.LineSegments( gridGeometry, materials );
+
+ ```
+
+parameters: 
+designGrid: arrays as in the examples
+If the design results in double lines at one position, the surplus line is eliminated.
+  optional are
+multi material:  mode 'align' (2 materials) or 'side' (default, up to 6 materials)
+width, height, depth: For a box. The size of the box is determined by the design by default, but can also be specified as required.
+The length of the first line in the design of each side is decisive for the centering of the design. You can easily change the centering by using blanks at the beginning and end.
+
+Include: <script src="THREEg.js"></script>
+
+```javascript
+
+Description of the design in THREEg.js section Line Grid.   
+
+/*
+	design: array :
+	
+	icons
+	The characters on the keyboard have been chosen so that they roughly reflect the form.
+	
+	description
+	lines l f r b is left front right back
+	
+	char lines
+	G	l f r b		// compatible to labyrinth design
+	M	l f r
+	C	b l f
+	3	f r b
+	U	l b r
+	H	l r
+	:	f b
+	F	l f
+	7	f r
+	L	l b
+	J	b r
+	I	l 
+	1	r
+	-	f
+	.	b
+	
+	special signs
+	#	Grid with complete squares, equals G
+	
+	+	All the neighboring squares are connected.
+*/
+
+
+``` 
+
+---
+ 
+#### EXAMPLES:
+
+```javascript
+
+// Note: Half the length of the first string on each plane determines the center of the design.
+	
+	var designPlaneNo1 =[	// is created on the x-y plane
+	'        +        ',// spaces after + -->  length of first row, center of design
+	'        +  ',
+	'    .F7.-.F7. ', 
+	'    I.  G  .1 ',
+	'    I L. .J 1 ',
+	'    I   H   1 ',
+	'## : U C 3 M : ## ',
+	'    I   H   1 ',
+	'    I F- -7 1 ',
+	'    I-  H  -1 ',
+	'    -LJ-.-LJ- ',
+	'        +',
+	'        +'
+	];
+	
+	var designBoxNo2 = [
+	
+	[], // no px
+	[], // no nx
+	[   // py
+	'+++++++',
+	'++   ++',
+	'+ 7 F +',
+	'  1 I  ',
+	'+ J L +',
+	'++   ++',
+	'++   ++'
+	],
+	[  // ny
+	'### + ###',
+	'## +++  #',
+	'#  + +  #',
+	'#   H   #',
+	'   : :   ',
+	'#   H   #',
+	'#  L.J  #',
+	'##     ##',
+	'###   ###'
+	],
+	[   // pz
+	'+++++++++',
+	'+++###+++',
+	'##     ##',
+	'##  +  ##',
+	'##     ##',
+	'+++ H +++',
+	'+++###+++'
+	]   // no nz
+	];
+
+
+ ``` 
+ 
+
+
+
   

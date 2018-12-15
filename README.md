@@ -1,6 +1,6 @@
 # THREEg.js
 
-three. js addon to create special or extended geometries.
+# three.js addon to create special or extended geometries.
 
 The addon generates non indexed BufferGeometries. This allows an explosion representation.
 
@@ -9,102 +9,12 @@ The addon generates non indexed BufferGeometries. This allows an explosion repre
  
 
 For more efficiency.
-Each single geometry section between ..... name ...... can be deleted.
+
+Each single geometry section between ............... name ............... can be deleted.
+
 
 ---
  
- ..................................... Magic Sphere .............................................
-
-An enlarged sphere. 
-It is made up of eight parts. Multi material is supported.
-
-```javascript
-	geometry = new THREE.BufferGeometry();
-	geometry.createMagicSphere = THREEg.createMagicSphere; // insert the methode from THREEg.js
-	geometry.createMagicSphere( parameters ); // apply the methode
-	
-	// mesh
-	mesh = new THREE.Mesh( geometry, materials );
-        scene.add( mesh );
-
- ``` 
- 
-  Include: <script src="THREEg.js"></script>
-  
-  #### Example:
-  
-```javascript
-geometry = new THREE.BufferGeometry();
-geometry.createMagicSphere = THREEg.createMagicSphere; // insert the methode from THREEg.js
-geometry.createMagicSphere( {
-  
-	equator: 8,
-	contourmode: 'bezier',
-	parts: [ 1, 1, 1, 0, 0, 1, 1, 1 ],
-	radius: function( t ){ return  1.2 * ( 0.3 + Math.abs( Math.sin( 0.4 * t ) ) ) },
-	pointX: function( t ){ return  0.6 * ( 1 + Math.sin( 0.4 * t) ) },
-	pointY: function( t ){ return  0.4 * ( 1 + Math.sin( 0.3 * t) ) },
-  
- } ); 
-	  
-  ``` 
-  
-Parameters briefly explained in THREEg.js:
-
- ```javascript
-	/*	parameter overview	--- all parameters are optional ---
-	
-	p = {
-		
-			// simple properties
-		
-		equator,
-		uvmode,
-		contourmode,
-		explodemode,
-		
-			// array, value 1 for octant, otherwise arbitrary - upper counterclockwise, lower clockwise
-		parts, 
-		
-			// functions with  parameter time   // function ( t )
-	
-		radius,
-		rounding,
-		profile,		// y = f( x, t ),  0 < x < PI / 2, 0 < y < 1
-		pointX,			// normally interval 0 to PI / 2
-		pointY,			// normally interval 0 to 1
-		driftX,
-		driftY,
-		driftZ,
-		explode,		// factor for exploded view - non indexed BufferGeometry
-		
-	}	
-	
-	*/
- ``` 	
- 
-```javascript
-/* defaults and // values
-	
-	equator: 6,
-	uvmode: 0, //1
-	contourmode: 'rounding'; // 'profile'  'bezier' 'linear'
-	explodemode: 'center'; // 'normal'
-	
-	parts: [ 1, 1, 1, 1, 1, 1, 1, 1 ],
-	radius: function ( t ) { return 1 },
-	rounding: function ( t ) { return 1 },
-	profile: function ( x, t ) { return Math.sin( x ) },
-	pointX: function ( t ) { return 0.001 },
-	pointY: function ( t ) { return 0.999 },
-	driftX: function ( t ) { return 0 },
-	driftY: function ( t ) { return 0 },
-	driftZ: function ( t ) { return 0 },
-	explode: function ( t ) { return 0 },
-*/
-```
----
-
 ..................................... Magic Box ................................................
 
 An enlarged box. 
@@ -260,7 +170,6 @@ Parameters briefly explained in THREEg.js:
 			    
   ```
  
- ---
 further information:
 
 // contourmode 'rounding' 
@@ -296,7 +205,100 @@ further information:
 	return ( 1 - 2 * pY ) * tm * tm + 2 * pY * tm;	
  
   }
+ 
+ ---
+ 
 
+ ..................................... Magic Sphere .............................................
+
+An enlarged sphere. 
+It is made up of eight parts. Multi material is supported.
+
+```javascript
+	geometry = new THREE.BufferGeometry();
+	geometry.createMagicSphere = THREEg.createMagicSphere; // insert the methode from THREEg.js
+	geometry.createMagicSphere( parameters ); // apply the methode
+	
+	// mesh
+	mesh = new THREE.Mesh( geometry, materials );
+        scene.add( mesh );
+
+ ``` 
+ 
+  Include: <script src="THREEg.js"></script>
+  
+  #### Example:
+  
+```javascript
+geometry = new THREE.BufferGeometry();
+geometry.createMagicSphere = THREEg.createMagicSphere; // insert the methode from THREEg.js
+geometry.createMagicSphere( {
+  
+	equator: 8,
+	contourmode: 'bezier',
+	parts: [ 1, 1, 1, 0, 0, 1, 1, 1 ],
+	radius: function( t ){ return  1.2 * ( 0.3 + Math.abs( Math.sin( 0.4 * t ) ) ) },
+	pointX: function( t ){ return  0.6 * ( 1 + Math.sin( 0.4 * t) ) },
+	pointY: function( t ){ return  0.4 * ( 1 + Math.sin( 0.3 * t) ) },
+  
+ } ); 
+	  
+  ``` 
+  
+Parameters briefly explained in THREEg.js:
+
+ ```javascript
+	/*	parameter overview	--- all parameters are optional ---
+	
+	p = {
+		
+			// simple properties
+		
+		equator,
+		uvmode,
+		contourmode,
+		explodemode,
+		
+			// array, value 1 for octant, otherwise arbitrary - upper counterclockwise, lower clockwise
+		parts, 
+		
+			// functions with  parameter time   // function ( t )
+	
+		radius,
+		rounding,
+		profile,		// y = f( x, t ),  0 < x < PI / 2, 0 < y < 1
+		pointX,			// normally interval 0 to PI / 2
+		pointY,			// normally interval 0 to 1
+		driftX,
+		driftY,
+		driftZ,
+		explode,		// factor for exploded view - non indexed BufferGeometry
+		
+	}	
+	
+	*/
+ ``` 	
+ 
+```javascript
+/* defaults and // values
+	
+	equator: 6,
+	uvmode: 0, //1
+	contourmode: 'rounding'; // 'profile'  'bezier' 'linear'
+	explodemode: 'center'; // 'normal'
+	
+	parts: [ 1, 1, 1, 1, 1, 1, 1, 1 ],
+	radius: function ( t ) { return 1 },
+	rounding: function ( t ) { return 1 },
+	profile: function ( x, t ) { return Math.sin( x ) },
+	pointX: function ( t ) { return 0.001 },
+	pointY: function ( t ) { return 0.999 },
+	driftX: function ( t ) { return 0 },
+	driftY: function ( t ) { return 0 },
+	driftZ: function ( t ) { return 0 },
+	explode: function ( t ) { return 0 },
+*/
+```
 
  ---
 
@@ -459,7 +461,7 @@ var design3D = [
 
 ..................................... Line Grid ...................................................
 
-Easy to design Line Grid Geometryg.
+Easy to design Line Grid Geometry.
 
 The line grid can either be created in the xy-plane, or you can design grids on the sides of a box.
 

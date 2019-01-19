@@ -2,7 +2,7 @@
 
 #### A three.js addon to create special or extended geometries.
 
-The addon generates non indexed BufferGeometries. This allows an explosion representation.
+The addon generates indexed or non indexed BufferGeometries. Non indexed allows an explosion representation.
 
 @author hofk / http://sandbox.threejs.hofk.de/
  or http://sandboxthreeg.threejs.hofk.de/
@@ -17,7 +17,7 @@ Each single geometry section between ............................. name ........
  
 ..................................... Magic Box ................................................
 
-An enlarged box. 
+An enlarged box. Non indexed BufferGeometry.
 It is made up of 26 parts. Multi material is supported.
 
 ```javascript
@@ -211,7 +211,7 @@ Parameters briefly explained in THREEg.js:
 
  ..................................... Magic Sphere .............................................
 
-An enlarged sphere. 
+An enlarged sphere. Non indexed BufferGeometry.
 It is made up of eight parts. Multi material is supported.
 
 ```javascript
@@ -304,7 +304,7 @@ Parameters briefly explained in THREEg.js:
 
 ..................................... Labyrinth-3D-2D ..........................................
 
-Easy to design 3D and 2D Labyrinth Geometry.
+Easy to design 3D and 2D Labyrinth Geometry. Non indexed BufferGeometry.
 It is realized as one non-indexed BufferGeometry. Multi material is supported.
 
 
@@ -460,7 +460,7 @@ var design3D = [
 
 ..................................... Line Grid ...................................................
 
-Easy to design Line Grid Geometry.
+Easy to design Line Grid Geometry. Non indexed BufferGeometry.
 
 The line grid can either be created in the xy-plane, or you can design grids on the sides of a box.
 
@@ -594,7 +594,61 @@ Include: <script src="THREEg.js"></script>
 
  ``` 
  
+ 
+ ---
 
+..................................... Profiled Contour Geometry MultiMaterial ...................................................
 
+The geometry is realized as indexed BufferGeometry and supports two MultiMaterial modes.
+Each an array with the 2D coordinates of the profile shape and the frame contour is required.
 
+```javascript
+	geometry = new THREE.BufferGeometry();	
+	geometry.createProfiledContourMMgeometry = THREEg.createProfiledContourMMgeometry;
+	geometry.createProfiledContourMMgeometry( profileShape, contour, contourClosed, openEnded, profileMaterial );
+	// mesh
+	mesh = new THREE.Mesh( geometry, materials );
+        scene.add( mesh );
+
+ ``` 
+
+parameters:  
+ profileShape: array with coordinate pairs
+ contour: array  with coordinate pairs
+optional are
+ contourClosed: if true (default) the last point is connected to the first one
+ openEnded: if true the ends are not closed, default is false
+ profileMaterial: true - each section of the profile has an increased material index,
+ 		false (default) - each contour surface has an increased material index
+
+Include: <script src="THREEg.js"></script>
+ 
+ 
+#### EXAMPLE:
+
+```javascript
+
+var profileShape = [];
+for ( var i = 0; i < 8; i ++ ){	
+   profileShape.push ( 0.5 * Math.cos( i / detail * Math.PI * 2 ), 0.5 * Math.sin( i / detail * Math.PI * 2 ) ); }
+var contour = [-3,4, 0,4, 4,4, 2,1, 4,-2, 0,-3, -4,-3,	-4,0 ];
+var materials = [ // rainbow-colored	
+	new THREE.MeshPhongMaterial( { color: 0xfa0001, side: THREE.DoubleSide } ),
+	new THREE.MeshPhongMaterial( { color: 0xff7b00, side: THREE.DoubleSide } ),
+	new THREE.MeshPhongMaterial( { color: 0xf9f901, side: THREE.DoubleSide } ),
+	new THREE.MeshPhongMaterial( { color: 0x008601, side: THREE.DoubleSide } ),
+	new THREE.MeshPhongMaterial( { color: 0x01bbbb, side: THREE.DoubleSide } ),
+	new THREE.MeshPhongMaterial( { color: 0x250290, side: THREE.DoubleSide } ),	
+	new THREE.MeshPhongMaterial( { color: 0xfc4ea5, side: THREE.DoubleSide } ),
+	new THREE.MeshPhongMaterial( { color: 0x83058a, side: THREE.DoubleSide } ),
+	new THREE.MeshPhongMaterial( { color: 0x83058a, side: THREE.DoubleSide } )	
+]
+var geometry = new THREE.BufferGeometry( );
+geometry.createProfiledContourMMgeometry = THREEg.createProfiledContourMMgeometry;
+geometry.createProfiledContourMMgeometry( profileShape1, contour1, false, false, true );
+// mesh
+var fullProfile = new THREE.Mesh( geometry, materials );
+scene.add( fullProfile );
+
+ ``` 
   

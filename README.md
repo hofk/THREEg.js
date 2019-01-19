@@ -319,9 +319,12 @@ It is realized as one non-indexed BufferGeometry. Multi material is supported.
 
  ``` 
 
-parameters:  
+parameters:
+
  dim: '2D' or '3D'
+ 
  design: arrays as in the examples
+ 
  m: arrays for material index as in the examples
 
 
@@ -612,13 +615,20 @@ Each an array with the 2D coordinates of the profile shape and the frame contour
 
  ``` 
 
-parameters:  
+parameters:
+
  profileShape: array with coordinate pairs
+ 
  contour: array  with coordinate pairs
+ 
 optional are
+
  contourClosed: if true (default) the last point is connected to the first one
+ 
  openEnded: if true the ends are not closed, default is false
+ 
  profileMaterial: true - each section of the profile has an increased material index,
+ 
  		false (default) - each contour surface has an increased material index
 
 Include: <script src="THREEg.js"></script>

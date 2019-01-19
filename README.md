@@ -486,7 +486,8 @@ parameters:
 
  	For a box.
 	The size of the box is determined by the design by default, but can also be specified as required.
-	The length of the first line in the design of each side is decisive for the centering of the design. You can easily change the 	centering by using blanks at the beginning and end.
+	The length of the first line in the design of each side is decisive for the centering of the design.
+	You can easily change the centering by using blanks at the beginning and end.
 
 Include: <script src="THREEg.js"></script>
 

@@ -647,7 +647,7 @@ var materials = [ // rainbow-colored
 ]
 var geometry = new THREE.BufferGeometry( );
 geometry.createProfiledContourMMgeometry = THREEg.createProfiledContourMMgeometry;
-geometry.createProfiledContourMMgeometry( profileShape1, contour1, false, false, true );
+geometry.createProfiledContourMMgeometry( profileShape, contour, false, false, true );
 // mesh
 var fullProfile = new THREE.Mesh( geometry, materials );
 scene.add( fullProfile );

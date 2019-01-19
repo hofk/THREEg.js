@@ -321,11 +321,9 @@ It is realized as one non-indexed BufferGeometry. Multi material is supported.
 
 parameters:
 
- dim: '2D' or '3D'
- 
- design: arrays as in the examples
- 
- m: arrays for material index as in the examples
+ 	dim: '2D' or '3D'
+ 	design: arrays as in the examples
+ 	m: arrays for material index as in the examples
 
 
  Include: <script src="THREEg.js"></script>
@@ -478,20 +476,17 @@ var grid = new THREE.LineSegments( gridGeometry, materials );
 
 parameters:
 
-designGrid: arrays as in the examples
-
-If the design results in double lines at one position, the surplus line is eliminated.
+	designGrid: arrays as in the examples
+	If the design results in double lines at one position, the surplus line is eliminated.
 
   optional are
   
-multi material:  mode 'align' (2 materials) or 'side' (default, up to 6 materials)
+	multi material:  mode 'align' (2 materials) or 'side' (default, up to 6 materials)
+	width, height, depth:
 
-width, height, depth:
-
-  For a box.
-
-The size of the box is determined by the design by default, but can also be specified as required.
-The length of the first line in the design of each side is decisive for the centering of the design. You can easily change the centering by using blanks at the beginning and end.
+ 	For a box.
+	The size of the box is determined by the design by default, but can also be specified as required.
+	The length of the first line in the design of each side is decisive for the centering of the design. You can easily change the 	centering by using blanks at the beginning and end.
 
 Include: <script src="THREEg.js"></script>
 
@@ -617,19 +612,15 @@ Each an array with the 2D coordinates of the profile shape and the frame contour
 
 parameters:
 
- profileShape: array with coordinate pairs
+ 	profileShape: array with coordinate pairs
+ 	contour: array  with coordinate pairs
  
- contour: array  with coordinate pairs
- 
-optional are
+ optional are
 
- contourClosed: if true (default) the last point is connected to the first one
- 
- openEnded: if true the ends are not closed, default is false
- 
- profileMaterial: true - each section of the profile has an increased material index,
- 
- 		false (default) - each contour surface has an increased material index
+ 	contourClosed: if true (default) the last point is connected to the first one
+ 	openEnded: if true the ends are not closed, default is false
+ 	profileMaterial: true - each section of the profile has an increased material index,
+	false (default) - each contour surface has an increased material index
 
 Include: <script src="THREEg.js"></script>
  

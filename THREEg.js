@@ -1,4 +1,4 @@
-// THREEg.js ( rev 100.0 )
+// THREEg.js ( rev 102.0 )
 
 /**
  * @author hofk / http://threejs.hofk.de/
@@ -12,7 +12,7 @@
 
 'use strict';
 
-var g;	// THREE.BufferGeometry (non indexed)
+var g;	// THREE.BufferGeometry
 
 //#################################################################################################
 
@@ -3458,6 +3458,153 @@ function buildProfiledContourMMgeometry( ) {
 
 exports.createProfiledContourMMgeometry = createProfiledContourMMgeometry;
 exports.buildProfiledContourMMgeometry = buildProfiledContourMMgeometry;
+
+// .......................................  Road  ....................................................
+
+function createRoad( curvePoints, lengthSegments, trackDistances ) {
+	
+	// all parameters optional
+
+	g = this;  //  THREE.BufferGeometry() - geometry object from three.js
+	
+	g.td = trackDistances !== undefined ? trackDistances : [ -0.5, 0.5 ];
+			
+	g.wss = g.td.length;
+	g.ws = g.wss - 1;
+	
+	g.ls = lengthSegments !== undefined ? lengthSegments : 500;
+	g.lss = g.ls + 1;
+	
+	g.cP = curvePoints !== undefined ? curvePoints : [ -10,0,5, 0,1,0, 10,0,5 ];
+	
+	var pts = [];
+	
+	for ( var i = 0; i < g.cP.length; i += 3 ) {
+	
+		pts.push( new THREE.Vector3( g.cP[ i ], g.cP[ i + 1 ], g.cP[ i + 2 ] ) );
+	
+	}
+	
+	g.curve = new THREE.CatmullRomCurve3( pts );
+	
+	g.len = g.curve.getLength( );
+	
+	g.points = g.curve.getPoints( g.ls );
+	g.len = g.curve.getLength( );
+	g.lenList = g.curve.getLengths ( g.ls );
+	
+	g.buildRoad = buildRoad;
+	g.buildRoad( );
+	 
+}
+
+function buildRoad( ) {
+	
+	g.faceCount = g.ls * g.ws * 2;
+	g.vertexCount = g.lss * g.wss;
+	
+	g.faceIndices = new Uint32Array( g.faceCount * 3 );
+	g.vertices = new Float32Array( g.vertexCount * 3 );  
+	g.uvs = new Float32Array( g.vertexCount * 2 );
+	
+	g.setIndex( new THREE.BufferAttribute( g.faceIndices, 1 ) );	
+	g.addAttribute( 'position', new THREE.BufferAttribute( g.vertices, 3 ) );
+	g.addAttribute( 'uv', new THREE.BufferAttribute( g.uvs, 2 ) );
+	
+	var a, b1, c1, c2;
+	var posIdxCount = 0;
+		
+	for ( var j = 0; j < g.ls; j ++ ) {
+			
+		for ( var i = 0; i < g.ws; i ++ ) {
+			
+			// 2 faces / segment,  3 vertex indices
+			a =  g.wss * j + i;
+			b1 = g.wss * ( j + 1 ) + i;		// right-bottom
+			c1 = g.wss * ( j + 1 ) + 1 + i;
+		 // b2 = c1							// left-top
+			c2 = g.wss * j + 1 + i;
+			
+			g.faceIndices[ posIdxCount     ] = a; // right-bottom
+			g.faceIndices[ posIdxCount + 1 ] = b1;
+			g.faceIndices[ posIdxCount + 2 ] = c1; 
+			
+			g.faceIndices[ posIdxCount + 3 ] = a; // left-top
+			g.faceIndices[ posIdxCount + 4 ] = c1; // = b2,
+			g.faceIndices[ posIdxCount + 5 ] = c2;
+	
+			g.addGroup( posIdxCount, 6, i ); // write groups for multi material
+			
+			posIdxCount += 6;
+					
+		}
+			
+	}
+	
+	var uvIdxCount = 0;
+
+	for ( var j = 0; j < g.lss; j ++ ) {
+			
+		for ( var i = 0; i < g.wss; i ++ ) {
+			
+			g.uvs[ uvIdxCount     ] = g.lenList[ j ] / g.len;
+			g.uvs[ uvIdxCount + 1 ] = i / g.ws;
+			
+			uvIdxCount += 2;
+			
+		}
+		
+	}
+	
+	var tangent;
+	var normal = new THREE.Vector3( 0, 0, 0 );
+	var binormal = new THREE.Vector3( 0, 1, 0 );
+	
+	var x, y, z;
+	var vIdx = 0; // vertex index
+	var posIdx;   // position  index	
+	
+	for ( var j = 0; j < g.lss; j ++ ) {  // length
+			
+		for ( var i = 0; i < g.wss; i ++ ) { // width
+			
+			tangent = g.curve.getTangent( j / g.ls ); //  .. / length segments	
+		
+			normal.crossVectors( tangent, binormal );
+	
+			binormal.crossVectors( normal, tangent ); // new binormal
+			
+			normal.normalize();
+		
+			x = g.points[ j ].x + g.td[ i ] * normal.x;
+			y = g.points[ j ].y; 
+			z = g.points[ j ].z + g.td[ i ] * normal.z;
+			
+			xyzSet();
+			
+			vIdx ++;
+			
+		}
+		
+	}
+
+	g.attributes.position.needsUpdate = true;
+		
+	// set vertex position
+	function xyzSet() {
+		
+		posIdx = vIdx * 3;
+		
+		g.vertices[ posIdx ]  = x;
+		g.vertices[ posIdx + 1 ]  = y;
+		g.vertices[ posIdx + 2 ]  = z;
+		
+	}
+	
+}
+
+exports.createRoad = createRoad;
+exports.buildRoad = buildRoad;
 
 // ..................................... Helper ...................................................
 

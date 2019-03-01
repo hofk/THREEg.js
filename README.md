@@ -722,4 +722,4 @@ var mesh = new THREE.Mesh( g, material );
 scene.add( mesh );
 
 ``` 
-![CentralMarking](CentralMarking.png)
+![CentralMarking](CentralMarking.png)  CentralMarking.png

@@ -657,7 +657,7 @@ scene.add( fullProfile );
 
  ---
 
-........................................................ Road ................................................................
+.................................................................... Road ..................................................................................
 
 The geometry is realized as indexed BufferGeometry and supports MultiMaterial. 
 
@@ -675,10 +675,15 @@ The geometry is realized as indexed BufferGeometry and supports MultiMaterial.
 
 
 parameters: 
+
 	(all optional)
+	
  	curvePoints: Array  with groups of 3 coordinates each for CatmullRomCurve3, are converted to Vector3.
+	
  	lengthSegments: Number of segments for the length of the road.
+	
 	trackDistances: Array with distances to the center of the street (curve).
+	
 	
 
 Include: <script src="THREEg.js"></script>

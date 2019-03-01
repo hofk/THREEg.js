@@ -678,14 +678,47 @@ parameters:
 
 	(all optional)
 	
- 	curvePoints: Array  with groups of 3 coordinates each for CatmullRomCurve3, are converted to Vector3.
-	
- 	lengthSegments: Number of segments for the length of the road.
-	
-	trackDistances: Array with distances to the center of the street (curve).
-	
-	
-
+ 	curvePoints: Array  with groups of 3 coordinates each for CatmullRomCurve3, are converted to Vector3.   
+	lengthSegments: Number of segments for the length of the road.   
+	trackDistances: Array with distances to the center of the street (curve).   
+		
 Include: <script src="THREEg.js"></script>
  	
- 
+####  EXAMPLE:
+
+```javascript
+var curvePoints =  [
+ -25, 0.2, -25,
+ -24, 0.2, -24,
+ -4, 2, -9,
+ 4, 1, -6,
+ 6, 0, 0,
+ -3, 1, 1,
+ -11, 0, 6,
+ -12, 1, 1,
+ -7, 1, -3,
+ 7, 8, -9,
+ 13, 2, -12,
+];
+var lengthSegments = 200;
+var trackDistances = [ -0.62, -0.6, -0.02, 0.02, 0.6, 0.62 ];
+
+var g = new THREE.BufferGeometry( );
+g.createRoad = THREEg.createRoad;
+g.createRoad( curvePoints, lengthSegments, trackDistances );
+
+tex = new THREE.TextureLoader().load( 'CentralMarking.png' );
+tex.wrapS = THREE.RepeatWrapping;
+tex.repeat.set( lengthSegments / 2 );
+var material = [	
+	new THREE.MeshBasicMaterial( { color: 0xffffff, side: THREE.DoubleSide, wireframe: true} ),
+	new THREE.MeshBasicMaterial( { color: 0x000000, side: THREE.DoubleSide, wireframe: true} ),
+	new THREE.MeshBasicMaterial( { map: tex, side: THREE.DoubleSide, wireframe: true } ),
+	new THREE.MeshBasicMaterial( { color: 0x000000, side: THREE.DoubleSide} ),
+	new THREE.MeshBasicMaterial( { color: 0xffffff, side: THREE.DoubleSide} ),	
+];
+// mesh
+var mesh = new THREE.Mesh( g, material );
+scene.add( mesh );
+
+``` 

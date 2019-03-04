@@ -723,3 +723,9 @@ scene.add( mesh );
 
 ``` 
 ![CentralMarking](CentralMarking.png)  CentralMarking.png
+
+	g.t = []; // tangents
+	g.n = []; // normals
+	g.b = []; // binormals
+	
+are stored in the geometry, see example RoadRace.html	

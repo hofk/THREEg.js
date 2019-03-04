@@ -3560,25 +3560,31 @@ function buildRoad( ) {
 	var normal = new THREE.Vector3( 0, 0, 0 );
 	var binormal = new THREE.Vector3( 0, 1, 0 );
 	
+	g.t = []; // tangents
+	g.n = []; // normals
+	g.b = []; // binormals
+	
 	var x, y, z;
 	var vIdx = 0; // vertex index
-	var posIdx;   // position  index	
+	var posIdx;   // position index	
 	
 	for ( var j = 0; j < g.lss; j ++ ) {  // length
-			
-		for ( var i = 0; i < g.wss; i ++ ) { // width
-			
-			tangent = g.curve.getTangent( j / g.ls ); //  .. / length segments	
 		
-			normal.crossVectors( tangent, binormal );
-	
-			binormal.crossVectors( normal, tangent ); // new binormal
-			
-			normal.normalize();
+		tangent = g.curve.getTangent( j / g.ls ); //  .. / length segments
+		g.t.push( tangent.clone( ) );
+		
+		normal.crossVectors( tangent, binormal );
+		normal.normalize( );		
+		g.n.push( normal.clone( ) );
+		
+		binormal.crossVectors( normal, tangent ); // new binormal
+		g.b.push( binormal.clone( ) ); 
+				
+		for ( var i = 0; i < g.wss; i ++ ) { // width	
 		
 			x = g.points[ j ].x + g.td[ i ] * normal.x;
 			y = g.points[ j ].y; 
-			z = g.points[ j ].z + g.td[ i ] * normal.z;
+			z = g.points[ j ].z + g.td[ i ] * normal.z;			
 			
 			xyzSet();
 			
@@ -3587,8 +3593,6 @@ function buildRoad( ) {
 		}
 		
 	}
-
-	g.attributes.position.needsUpdate = true;
 		
 	// set vertex position
 	function xyzSet() {

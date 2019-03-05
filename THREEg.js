@@ -3567,7 +3567,7 @@ function buildRoad( ) {
 	var x, y, z;
 	var vIdx = 0; // vertex index
 	var posIdx;   // position index	
-	
+	var lxz, nx, nz;
 	for ( var j = 0; j < g.lss; j ++ ) {  // length
 		
 		tangent = g.curve.getTangent( j / g.ls ); //  .. / length segments
@@ -3578,13 +3578,24 @@ function buildRoad( ) {
 		g.n.push( normal.clone( ) );
 		
 		binormal.crossVectors( normal, tangent ); // new binormal
-		g.b.push( binormal.clone( ) ); 
-				
-		for ( var i = 0; i < g.wss; i ++ ) { // width	
+		g.b.push( binormal.clone( ) );
 		
+		lxz = Math.sqrt( normal.x * normal.x + normal.z * normal.z );
+		
+		
+		nx = normal.x / lxz;
+		nz = normal.z / lxz;
+		
+		
+		for ( var i = 0; i < g.wss; i ++ ) { // width	
+			/*
 			x = g.points[ j ].x + g.td[ i ] * normal.x;
 			y = g.points[ j ].y; 
-			z = g.points[ j ].z + g.td[ i ] * normal.z;			
+			z = g.points[ j ].z + g.td[ i ] * normal.z;
+			*/
+			x = g.points[ j ].x + g.td[ i ] * nx;
+			y = g.points[ j ].y; 
+			z = g.points[ j ].z + g.td[ i ] * nz;
 			
 			xyzSet();
 			

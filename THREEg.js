@@ -3574,6 +3574,9 @@ function buildRoad( ) {
 		g.t.push( tangent.clone( ) );
 		
 		normal.crossVectors( tangent, binormal );
+		
+		normal.y = 0;
+		
 		normal.normalize( );		
 		g.n.push( normal.clone( ) );
 		

@@ -657,16 +657,21 @@ scene.add( fullProfile );
 
  ---
 
-.................................................................... Road ..................................................................................
+.................................................................... Road / Wall ..............................................................................
 
 The geometry is realized as indexed BufferGeometry and supports MultiMaterial. 
 
 
 
 ```javascript
-	geometry = new THREE.BufferGeometry();	
+	geometry = new THREE.BufferGeometry();
+	
 	g.createRoad = THREEg.createRoad;
-	g.createRoad( curvePoints, lengthSegments, trackDistances );
+	g.createRoad( curvePoints, lengthSegments, trackDistances );	
+   // or
+	g.createWall = THREEg.createWall;
+	g.createWall( curvePoints, lengthSegments, sidesDistances, widthDistance, hightDistance );
+		
 	// mesh
 	mesh = new THREE.Mesh( geometry, materials );
         scene.add( mesh );
@@ -680,11 +685,15 @@ parameters:
 	
  	curvePoints: Array  with groups of 3 coordinates each for CatmullRomCurve3, are converted to Vector3.   
 	lengthSegments: Number of segments for the length of the road.   
-	trackDistances: Array with distances to the center of the street (curve).   
+	trackDistances: Array with distances to the center of the street (curve).
+	
+	sidesDistances: Array of 4 arrays with distances for sides left, top, right, bottom. If [] the side is not created.
+	widthDistance: Distance between left and right side. If not specified, the width of the top page is used.
+	hightDistance: Distance between top and bottom side. If not specified, the height of the left page is used.
 		
 Include: <script src="THREEg.js"></script>
  	
-####  EXAMPLE:
+####  EXAMPLE: road
 
 ```javascript
 var curvePoints =  [
@@ -729,3 +738,57 @@ scene.add( mesh );
 	g.b = []; // binormals
 	
 are stored in the geometry, see example RoadRace.html	
+
+
+ 	
+####  EXAMPLE: wall
+
+```javascript
+
+var curvePoints =  [
+ -16, 0,  24,
+  -2, 0,  24,
+  10, 3,  16,
+  14, 2,   6,
+  28, 0,   4,
+  22, 1,  -8,
+  10, 2, -14,
+   0, 5, -12,
+  -4, 2,  -6,
+ -16, 0,   0,
+ -20, 3,   8,
+ -24, 0,  24,
+ -16, 0,  24  
+];
+
+var lengthSegments = 400;
+var sidesDistances = [ [ -0.9, -0.3, 0.3, 0.9 ], [ -0.4, 0, 0.4 ], [ -0.9, -0.3, 0.3, 0.9 ], [ -0.9, 1.1 ] ];
+
+var gWall = new THREE.BufferGeometry( );
+gWall.createWall = THREEg.createWall;
+gWall.createWall( curvePoints, lengthSegments, sidesDistances );
+//gWall.createWall( ); // all parameters default
+
+tex = new THREE.TextureLoader().load( 'brick.jpg' );
+tex.wrapS = THREE.RepeatWrapping;
+tex.wrapT = THREE.RepeatWrapping;
+tex.repeat.set( lengthSegments / 2, 4 );
+
+var material = [
+		
+	new THREE.MeshBasicMaterial( { map: tex, side: THREE.DoubleSide } ),
+	new THREE.MeshBasicMaterial( { color: 0xff8844, side: THREE.DoubleSide, wireframe: true } ),
+	new THREE.MeshBasicMaterial( { color: 0xffff00, side: THREE.DoubleSide, wireframe: true } ),
+	new THREE.MeshBasicMaterial( { color: 0x000000, side: THREE.DoubleSide } ),
+	new THREE.MeshBasicMaterial( { color: 0xffffff, side: THREE.DoubleSide } ),
+	new THREE.MeshBasicMaterial( { color: 0x128821, side: THREE.DoubleSide } ),
+	new THREE.MeshBasicMaterial( { map: tex, side: THREE.DoubleSide } ),
+	new THREE.MeshBasicMaterial( { color: 0x0000ff, side: THREE.DoubleSide, wireframe: true } ),
+	new THREE.MeshBasicMaterial( { color: 0x004400, side: THREE.DoubleSide } ),
+	
+];
+
+var mesh = new THREE.Mesh( gWall, material );
+scene.add( mesh );
+
+ ``` 

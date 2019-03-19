@@ -684,7 +684,8 @@ parameters:
 	(all optional)
 	
  	curvePoints: Array  with groups of 3 coordinates each for CatmullRomCurve3, are converted to Vector3.   
-	lengthSegments: Number of segments for the length of the road.   
+	lengthSegments: Number of segments for the length of the road.
+	
 	trackDistances: Array with distances to the center of the street (curve).
 	
 	sidesDistances: Array of 4 arrays with distances for sides left, top, right, bottom. If [] the side is not created.

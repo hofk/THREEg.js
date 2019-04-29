@@ -819,7 +819,7 @@ The geometry is realized as indexed BufferGeometry and supports MultiMaterial.
  ``` 
 
 
-parameters: 
+parameters:  (all parameters are optional)
 
 	p = {
 		radius,

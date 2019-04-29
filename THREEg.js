@@ -1,4 +1,4 @@
-// THREEg.js ( rev 102.0 )
+// THREEg.js ( rev 104.0 )
 
 /**
  * @author hofk / http://threejs.hofk.de/
@@ -3767,6 +3767,862 @@ function buildRoadWall( ) {
 exports.createRoad = createRoad;
 exports.createWall = createWall;
 exports.buildRoadWall = buildRoadWall;
+
+// ..................................... Sphere Cut.............................................
+
+function createSphereCut( p ) {
+	
+	/*	parameter overview	--- all parameters are optional
+	p = {
+		radius,
+		equator, // set to divisible by 4 if symmetric (min 8)
+		cut, // array, [ px, nx, py, ny, pz, nz ] if symmetric max. 1/2 equator, otherwise equator, non-overlapping
+		parts, // array, value 1 for octant, otherwise arbitrary - upper counterclockwise, lower clockwise
+		symmetric // default is false
+	}	
+	*/
+	
+	if ( p === undefined ) p = {};
+	
+	g = this;  //  THREE.BufferGeometry() - geometry object from three.js
+	
+	//............................................................ set defaults
+	g.radius =    p.radius !== undefined ? p.radius : 1;
+	g.equator =   p.equator !== undefined ? p.equator : 16;
+	g.cut =       p.cut !== undefined ? p.cut	: [ 4, 4, 4, 4, 4, 4 ]; // cut px, nx, py, ny, pz, nz
+	g.parts =     p.parts !== undefined ? p.parts	: [ 1, 1, 1, 1, 1, 1, 1, 1 ];
+	g.symmetric = p.symmetric !== undefined ? p.symmetric : false;
+	//..............................................................................................
+	
+	if ( g.symmetric ) {
+		
+		g.buildCutSymm = buildCutSymm;
+		g.buildCutSymm( );
+		
+	} else {
+	
+		g.buildCut = buildCut;
+		g.buildCut( );
+		
+	}
+	
+}
+
+function buildCutSymm( ) {
+	
+	g = this;
+	
+	//set equator to divisible by 4 (min 8)
+	g.equator = g.equator > 8 ? ( g.equator + ( 4 - g.equator % 4 ) ) : 8;
+	
+	const fns = g.equator / 4; // fineness equals 1/4 equator
+	const eqt2 = fns * 2; // equals equator / 2
+		
+	const sumNN = ( n ) => ( n * ( n + 1 ) / 2 );	// Sum natural numbers
+	const sumON = ( n ) => ( n * n );				// Sum odd numbers
+	const rCirc = ( h ) => ( Math.sqrt( h *( 2 - h ) ) ); // radius cutting circle ( section h )
+	
+	const pi2 = Math.PI / 2;
+	
+	let theta, phi, dPhi;
+	
+	let posIdx = 0;
+	let fIdx = 0;
+	let uvIdx = 0;
+	let a0, a1, b0, b1;	// indices
+	let idxOffset;
+	
+	let signX, signY, signZ, spin;
+	
+	let faceCount = 0;
+	let vertexCount = 0;
+	
+	let v8Idx = [ 0 ]; // start vertex index of sphere part
+	
+	let cutX, cutY, cutZ;
+	
+	const cutIdxX = [ 0, 1, 1, 0 ]; // cut index x per part
+	const cutIdxY = [ 2, 3 ]; // cut index y per part
+	const cutIdxZ = [ 5, 5, 4, 4 ]; // cut index z per part
+	
+	g.cutRadius = []; // calculated radius of cut circles px, nx, py, ny, pz, nz - for external use
+	g.cutDistance = []; // calculated distance of the cut circles to the center px, nx, py, ny, pz, nz - for external use
+	g.cutSegments = []; // segments of the cut circles - for external use
+	
+	for ( let i = 0; i < 6; i ++ ) {
+		
+		g.cutSegments[ i ] = 4 * g.cut[ i ];
+		
+	}
+	
+	for ( let p = 0; p < 8; p ++ ) { // 8 parts of sphere
+		
+		if ( g.parts[ p ] === 1 ) {
+		
+			getCutXYZ( p );
+		
+			faceCount += 3 * sumON( eqt2 ) + 4 * sumON( fns ) - sumON( cutX ) - sumON( cutY ) - sumON( cutZ );
+			vertexCount += 3 * sumNN( eqt2 + 1 ) + 4 * sumNN( fns + 1 ) - sumNN( cutX ) - sumNN( cutY ) - sumNN( cutZ );
+			
+		}
+		
+		v8Idx.push( vertexCount );
+		
+	}
+	
+	g.faceIndices = new Uint32Array( faceCount * 3 );
+	g.vertices = new Float32Array( vertexCount * 3 );
+	g.uvs = new Float32Array( vertexCount * 2 );
+	g.setIndex( new THREE.BufferAttribute( g.faceIndices, 1 ) );
+	g.addAttribute( 'position', new THREE.BufferAttribute( g.vertices, 3 ) );
+	g.addAttribute( 'uv', new THREE.BufferAttribute( g.uvs, 2 ) );
+	
+	for ( let p = 0; p < 8; p ++ ) { // 8 parts of sphere
+		
+		if ( g.parts[ p ] === 1 ) {
+			
+			getCutXYZ( p );
+			
+			indicesPartSphere( p );
+			verticesPartSphere( p );
+			
+		}	
+		
+	}	
+	
+	// detail functions
+	
+	function getCutXYZ( p ) {
+		
+		cutX = g.cut[ cutIdxX[ p % 4 ] ];
+		cutY = g.cut[ cutIdxY[ Math.floor( p / 4 ) ] ];
+		cutZ = g.cut[ cutIdxZ[ p % 4 ] ];
+		
+	}
+	
+	function indicesPartSphere( p ){
+	
+		// write groups for multi material
+		g.addGroup( fIdx, ( 3 * sumON( eqt2 ) + 4 * sumON( fns ) - sumON( cutX ) - sumON( cutY ) - sumON( cutZ ) ) * 3, p );
+		
+		idxOffset = v8Idx[ p ];  // start vertex index
+		
+		spin = ( p === 0 || p === 2 || p === 5 || p === 7 ) ? true : false;
+		
+		// 7 sections per part
+		
+		makeIndices( cutX, eqt2 ); 
+		idxOffset += sumNN( eqt2 + 1 ) - sumNN( cutX );
+		
+		makeIndices( cutY, eqt2 );
+		idxOffset += sumNN( eqt2 + 1 ) - sumNN( cutY );
+		
+		makeIndices( cutZ, eqt2 );
+		idxOffset += sumNN( eqt2 + 1 ) - sumNN( cutZ );
+		
+		for ( let m = 0; m < 4; m ++ ) { // make center x, y, z, middle
+			
+			makeIndices( 0, fns ); 
+			idxOffset += sumNN( fns + 1 );
+			
+		}
+		
+	}
+	
+	function verticesPartSphere( p ) {
+		
+		signX = ( p === 0 || p === 3 || p === 4 || p === 7 ) ? 1 : -1;
+		signY = p < 4 ? 1 : -1; 
+		signZ = ( p === 2 || p === 3 || p === 6 || p === 7 ) ? 1 : -1;
+		
+		spin = ( p === 0 || p === 2 || p === 5 || p === 7 ) ? true : false;
+		
+		g.edgeX = [];
+		g.edgeY = [];
+		g.edgeZ = [];
+		
+		g.cEdgeX = [];
+		g.cEdgeY = [];
+		g.cEdgeZ = [];
+		
+		calculateVertices( p, 'x', cutX );
+		calculateVertices( p, 'y', cutY );
+		calculateVertices( p, 'z', cutZ );
+		
+		calculateCenterVertices( 'x', g.edgeY, g.edgeZ );
+		calculateCenterVertices( 'y', g.edgeZ, g.edgeX );
+		calculateCenterVertices( 'z', g.edgeX, g.edgeY );
+		
+		calculateMiddleVertices(  );
+	
+	}
+	
+	function makeIndices( begin, end ) {
+		
+		a0 = idxOffset;
+			
+		for ( let i = begin; i < end; i ++ ) {
+			
+			a1 = a0 + 1;
+			b0 = a0 + i + 1;
+			b1 = b0 + 1;
+			
+			// each two faces
+			
+			for ( let j = 0; j < i ; j ++ ) {
+				
+				g.faceIndices[ fIdx     ] = j + a0;			// left face
+				g.faceIndices[ fIdx + 1 ] = j + ( spin ? b1 : b0 );
+				g.faceIndices[ fIdx + 2 ] = j + ( spin ? b0 : b1 );
+				
+				fIdx += 3;
+				
+				g.faceIndices[ fIdx     ] = j + a0;			// right face
+				g.faceIndices[ fIdx + 1 ] = j + ( spin ? a1 : b1 );
+				g.faceIndices[ fIdx + 2 ] = j + ( spin ? b1 : a1 );
+				
+				fIdx += 3;
+				
+			}
+			
+			// last face in row ( like a left face )
+			
+			g.faceIndices[ fIdx     ] = i + a0;
+			g.faceIndices[ fIdx + 1 ] = i + ( spin ? b1 : b0 );
+			g.faceIndices[ fIdx + 2 ] = i + ( spin ? b0 : b1 );
+			
+			fIdx += 3;
+			
+			a0 += i + 1; // next start index
+			
+		}
+		
+	}
+	
+	function calculateVertices( p, axis, cut ) {
+		
+		let x, y, z, si, cosi, coco;
+		
+		for ( let i = cut; i <= eqt2; i ++ ) {
+			
+			theta = Math.PI / 2 * ( 1 -  i / g.equator );
+			phi =  0;
+			
+			for ( let j = 0; j <= i ; j ++ ) {
+				
+				si  = Math.sin( theta );
+				cosi = Math.cos( theta ) * Math.sin( phi );
+				coco = Math.cos( theta ) * Math.cos( phi );
+				
+				if(  axis === 'x' ) {
+					
+					x = si;
+					y = coco;
+					z = cosi; 
+					
+					g.vertices[ posIdx + 0 ] = signX * g.radius * x;
+					g.vertices[ posIdx + 1 ] = signY * g.radius * y;
+					g.vertices[ posIdx + 2 ] = signZ * g.radius * z;
+					
+					if ( i === cut && j === 0 ) {
+						
+						g.cutRadius[ cutIdxX[ p % 4 ] ] = rCirc( 1 - x ) * g.radius; // cut circle radius - for external use
+						g.cutDistance[ cutIdxX[ p % 4 ] ] = x * g.radius; // height cap - for external use
+						
+					}
+					
+					if ( i === eqt2 ) g.edgeX.push( x, y, z );
+					
+				}
+				
+				if(  axis === 'y' ) {
+					
+					x = cosi; 
+					y = si; 
+					z = coco; 
+					
+					g.vertices[ posIdx + 0 ] = signX * g.radius * x;
+					g.vertices[ posIdx + 1 ] = signY * g.radius * y;
+					g.vertices[ posIdx + 2 ] = signZ * g.radius * z;
+					
+					if ( i === cut && j === 0 ) {
+						
+						g.cutRadius[ cutIdxY[ Math.floor( p / 4 ) ] ] = rCirc( 1 - y ) * g.radius; // cut circle radius - for external use
+						g.cutDistance[ cutIdxY[ Math.floor( p / 4 )  ] ] = y * g.radius; // height cap - for external use
+						
+					}
+					
+					if ( i === eqt2 ) g.edgeY.push( x, y, z );
+				
+				}
+				
+				if(  axis === 'z' ) {
+					
+					x = coco;
+					y = cosi;
+					z = si;
+				
+					g.vertices[ posIdx + 0 ] = signX * g.radius * x;
+					g.vertices[ posIdx + 1 ] = signY * g.radius * y;
+					g.vertices[ posIdx + 2 ] = signZ * g.radius * z;
+					
+					if ( i === cut && j === 0 ) {
+						
+						g.cutRadius[ cutIdxZ[ p % 4 ] ] = rCirc( 1 - z ) * g.radius; // cut circle radius - for external use
+						g.cutDistance[ cutIdxZ[ p % 4 ] ] = z * g.radius; // height cap - for external use
+					
+					}
+					
+					if ( i === eqt2 ) g.edgeZ.push( x, y, z );
+					
+				}
+				
+				setUVs( x, y, z );
+				
+				posIdx += 3;
+				
+				phi += pi2 / i;
+			
+			}
+			
+		}
+	
+	}
+	
+	function calculateCenterVertices( axis, edge1, edge2 ) {
+		
+		let x, y, z, v1x, v1y, v1z, v2x, v2y, v2z, i3, h, R;
+		
+		// i === 0
+		x = edge1[ 0 ];
+		y = edge1[ 1 ];
+		z = edge1[ 2 ];
+		
+		g.vertices[ posIdx     ] = signX * g.radius * x;
+		g.vertices[ posIdx + 1 ] = signY * g.radius * y;
+		g.vertices[ posIdx + 2 ] = signZ * g.radius * z;
+		
+		setUVs( x, y, z );
+		
+		// i === 1 
+		x = edge2[ eqt2 * 3 - 3 ];
+		y = edge2[ eqt2 * 3 - 2 ];
+		z = edge2[ eqt2 * 3 - 1 ];
+		
+		g.vertices[ posIdx + 3 ] = signX * g.radius * x;
+		g.vertices[ posIdx + 4 ] = signY * g.radius * y;
+		g.vertices[ posIdx + 5 ] = signZ * g.radius * z;
+		
+		setUVs( x, y, z );
+		
+		x = edge1[ 3 ];
+		y = edge1[ 4 ];
+		z = edge1[ 5 ];
+		
+		g.vertices[ posIdx + 6 ] = signX * g.radius * x;
+		g.vertices[ posIdx + 7 ] = signY * g.radius * y;
+		g.vertices[ posIdx + 8 ] = signZ * g.radius * z;
+		
+		setUVs( x, y, z );
+		
+		posIdx += 9;
+		
+		for ( let i = 2; i <= fns; i ++ ) {
+			
+			i3 = i * 3;
+			
+			v2x = edge2[ eqt2 * 3 - i3 ];
+			v2y = edge2[ eqt2 * 3 + 1 - i3 ];
+			v2z = edge2[ eqt2 * 3 + 2 - i3 ];
+			
+			v1x = edge1[ i3 ];
+			v1y = edge1[ 1 + i3 ]; 
+			v1z = edge1[ 2 + i3 ];
+			
+			h = 1 - ( axis === 'x' ? v1x : axis === 'y' ? v1y : v1z );
+			
+			R = rCirc( h );
+			
+			phi = axis === 'x' ? Math.acos( v2z / R ) : axis === 'y' ? Math.acos( v2x / R ) : Math.acos( v2y / R );
+			
+			dPhi = ( pi2 - 2 * phi ) / i;
+			
+			for ( let j = 0; j <= i; j ++ ) {
+				
+				if ( axis === 'x' ) {
+					
+					x = v1x; // =  v2x
+					y = R * Math.sin( phi );
+					z = R * Math.cos( phi );
+					
+					if ( i === fns ) g.cEdgeX.push(  x, y, z ); 
+					
+				}
+				
+				if ( axis === 'y' ) {
+				
+					x = R * Math.cos( phi );
+					y = v1y; // = v2y
+					z = R * Math.sin( phi );
+					
+					if ( i === fns ) g.cEdgeY.push( x, y, z );
+					
+				}
+				
+				if ( axis === 'z' ) {
+					
+					x = R * Math.sin( phi );
+					y = R * Math.cos( phi );
+					z = v1z; // = v2z 
+					
+					if ( i === fns ) g.cEdgeZ.push( x, y, z ); 
+					
+				}
+				
+				g.vertices[ posIdx     ] = signX * g.radius * x;
+				g.vertices[ posIdx + 1 ] = signY * g.radius * y;
+				g.vertices[ posIdx + 2 ] = signZ * g.radius * z;
+				
+				setUVs( x, y, z );
+				
+				phi += dPhi;
+				
+				posIdx += 3;
+				
+			}
+			
+		}
+		
+	}
+	
+	function calculateMiddleVertices(  ) {
+		
+		let  x, y, z, h, R;
+		
+		// i === 0 
+		x = g.cEdgeY[ 0 ];
+		y = g.cEdgeY[ 1 ];
+		z = g.cEdgeY[ 2 ];
+		
+		g.vertices[ posIdx     ] = signX * g.radius * x;
+		g.vertices[ posIdx + 1 ] = signY * g.radius * y;
+		g.vertices[ posIdx + 2 ] = signZ * g.radius * z;
+		
+		setUVs( x, y, z );
+		
+		// i === 1
+		x = g.cEdgeZ[ fns * 3 - 3 ];
+		y = g.cEdgeZ[ fns * 3 - 2 ];
+		z = g.cEdgeZ[ fns * 3 - 1 ];
+		
+		g.vertices[ posIdx + 3 ] = signX * g.radius * x;
+		g.vertices[ posIdx + 4 ] = signY * g.radius * y;
+		g.vertices[ posIdx + 5 ] = signZ * g.radius * z;
+		
+		setUVs( x, y, z );
+		
+		x = g.cEdgeY[ 3 ];
+		y = g.cEdgeY[ 4 ];
+		z = g.cEdgeY[ 5 ];
+		
+		g.vertices[ posIdx + 6 ] = signX * g.radius * x;
+		g.vertices[ posIdx + 7 ] = signY * g.radius * y;
+		g.vertices[ posIdx + 8 ] = signZ * g.radius * z;
+		
+		setUVs( x, y, z );
+		
+		posIdx += 9;
+		
+		for ( let i = 2; i <= fns; i ++ ) {
+		
+			h = 1 - g.cEdgeZ[ fns * 3 - i * 3 ]; 
+			
+			R = rCirc( h );
+			
+			phi = Math.acos( g.cEdgeZ[ fns * 3 - i * 3 + 2 ] / R );
+			
+			dPhi = ( pi2 - 2 * phi ) / i;
+			
+			for ( let j = 0; j <= i; j ++ ) {
+				
+				x =  g.cEdgeZ[ fns * 3 - i * 3 ];
+				y =  R * Math.sin( phi );
+				z =  R * Math.cos( phi );
+				
+				g.vertices[ posIdx     ] = signX * g.radius * x;
+				g.vertices[ posIdx + 1 ] = signY * g.radius * y;
+				g.vertices[ posIdx + 2 ] = signZ * g.radius * z;
+				
+				setUVs( x, y, z );
+				
+				posIdx += 3;
+				
+				phi += dPhi;
+				
+			}
+			
+		}	
+			
+	}
+	
+	function setUVs( x, y, z ) {
+		
+		let uvu;
+		
+		x += 0.4 * x * ( 1 - Math.cos( pi2 * y ) );
+		z += 0.4 * z * ( 1 - Math.cos( pi2 * y ) );
+		uvu = ( Math.asin( x ) + Math.acos( z ) ) / 2 / pi2;
+		
+		g.uvs[ uvIdx ] = spin ? 1 - uvu : uvu ;
+		g.uvs[ uvIdx + 1 ] = Math.asin( y ) / pi2;
+		
+		uvIdx += 2;
+		
+	}
+	
+}
+
+function buildCut( ) {
+	
+	g = this;
+	
+	const sumNN = ( n ) => ( n * ( n + 1 ) / 2 );	// Sum natural numbers
+	const sumON = ( n ) => ( n * n );				// Sum odd numbers
+	const scale = ( k ) => ( 0.84 * k * k + 0.16 * k ); // section scale
+	const rCirc = ( h ) => ( Math.sqrt( h *( 2 - h ) ) ); // radius cutting circle ( section h )
+	
+	const pi = Math.PI;
+	const pi2 = pi / 2;
+	
+	let cutT, cutB, cutA; // top, left or right per part
+	let phi;
+	let iB, iA;
+	let a0, a1, b0, b1;	// indices
+	let vOff; // vertices offset per row
+	let spin;
+	
+	let posIdx = 0;
+	let fIdx = 0;
+	let uvIdx = 0;
+	
+	let faceCount = 0;
+	let vertexCount = 0;
+	
+	let v8Idx = [ 0 ]; // start vertex index of sphere part
+	
+	const cutIdxT = [ 2, 3 ]; // cut index T top or bottom per part
+	const cutIdxB = [ 5, 5, 4, 4 ]; // cut index B left or right per part
+	const cutIdxA = [ 0, 1, 1, 0 ]; // cut index A left or right per part
+	
+	g.cutRadius = []; // calculated radius of cut circles px, nx, py, ny, pz, nz - for external use
+	g.cutDistance = []; // calculated distance of the cut circles to the center px, nx, py, ny, pz, nz - for external use
+	g.cutSegments = []; // segments of the cut circles  - for external use
+	
+	for ( let i = 0; i < 6; i ++ ) {
+		
+		g.cutSegments[ i ] = 4 * g.cut[ i ];
+		
+	}
+	
+	for ( let p = 0; p < 8; p ++ ) { // 8 parts of sphere
+		
+		if ( g.parts[ p ] === 1 ) {
+			
+			getCutTBA( p );
+			
+			faceCount += sumON( g.equator ) - sumON( cutT ) - sumON( cutB ) - sumON( cutA );
+			vertexCount += sumNN( g.equator + 1 ) - sumNN( cutT ) - sumNN( cutB ) - sumNN( cutA );
+			
+		}
+		
+		v8Idx.push( vertexCount );
+		
+	}
+	
+	g.faceIndices = new Uint32Array( faceCount * 3 );
+	g.vertices = new Float32Array( vertexCount * 3 );
+	g.uvs = new Float32Array( vertexCount * 2 );
+	g.setIndex( new THREE.BufferAttribute( g.faceIndices, 1 ) );
+	g.addAttribute( 'position', new THREE.BufferAttribute( g.vertices, 3 ) );
+	g.addAttribute( 'uv', new THREE.BufferAttribute( g.uvs, 2 ) );
+	
+	for ( let p = 0; p < 8; p ++ ) { // 8 parts of sphere
+	
+		if ( g.parts[ p ] === 1 ) {
+			
+			getCutTBA( p );
+			
+			iB = g.equator - cutB;  // index B
+			iA = g.equator - cutA;  // index A
+			
+			indicesPartSphere( p );
+			verticesPartSphere( p );
+			
+		}	
+		
+	}
+	
+	// detail functions
+	
+	function getCutTBA( p ) {
+		
+		cutT = g.cut[ cutIdxT[ Math.floor( p / 4 ) ] ];
+		cutB = g.cut[ cutIdxB[ p % 4 ] ];
+		cutA = g.cut[ cutIdxA[ p % 4 ] ];
+		
+	}
+	
+	function indicesPartSphere( p ) {
+		
+		// write groups for multi material
+		g.addGroup( fIdx, ( sumON( g.equator ) - sumON( cutT ) - sumON( cutB ) - sumON( cutA ) ) * 3, p );
+		
+		a0 = v8Idx[ p ];  // start vertex index
+		
+		for ( let i = cutT; i < g.equator; i ++ ) {
+			
+			vOff = i - ( i > iB ? i - iB : 0 ) - ( i > iA ? i - iA : 0 );
+			
+			a1 = a0 + 1;
+			b0 = a0 + vOff + ( i < iB ? 1 : 0 ); // start index - below  
+			b1 = b0 + 1;
+			
+			spin = ( p === 0 || p === 2 || p === 5 || p === 7 ) ? true : false;
+			
+			// each two faces
+			
+			for ( let j = 0; j < vOff; j ++ ) {
+				
+				if ( i < iB || j > 0 ) {
+					
+					g.faceIndices[ fIdx     ] = j + a0;		// left face
+					g.faceIndices[ fIdx + 1 ] = j + ( spin ? b1 : b0 );
+					g.faceIndices[ fIdx + 2 ] = j + ( spin ? b0 : b1 );
+					
+					fIdx += 3;
+					
+				}
+					
+				g.faceIndices[ fIdx     ] = j + a0;			// right face
+				g.faceIndices[ fIdx + 1 ] = j + ( spin ? a1 : b1 );
+				g.faceIndices[ fIdx + 2 ] = j + ( spin ? b1 : a1 );
+				
+				fIdx += 3;
+				
+			}
+			
+			if ( i < iA ) {
+				
+				// last face in row ( like a left face )
+				
+				g.faceIndices[ fIdx     ] = vOff + a0;
+				g.faceIndices[ fIdx + 1 ] = vOff + ( spin ? b1 : b0 );
+				g.faceIndices[ fIdx + 2 ] = vOff + ( spin ? b0 : b1 );
+				
+				fIdx += 3;
+				
+			}
+		
+			a0 += vOff + 1; // next start index
+			
+		}
+		
+	}
+	
+	function verticesPartSphere( p ) {
+		
+		const signX = ( p === 0 || p === 3 || p === 4 || p === 7 ) ? 1 : -1;
+		const signY = p < 4 ? 1 : -1; 
+		const signZ = ( p === 2 || p === 3 || p === 6 || p === 7 ) ? 1 : -1;
+		
+		let spin = ( p === 0 || p === 2 || p === 5 || p === 7 ) ? true : false;
+		
+		let x, y, z, x0, x1, y0, y1, z0, z1, dx, dy, dz, vCount, t, uvu;
+		
+		let yB = [];
+		let yA = [];
+		
+		let yT = Math.sin( pi2 * ( 1 - cutT / g.equator ) );	// y top
+		
+		let hT = 1 - yT;		// height cap T top
+		let rT = rCirc( hT );	// is top circle radius ( or bottom for p > 3)
+		
+		let hB = 1 - Math.sin( pi2 * ( 1 - cutB / g.equator ) ); // height cap B
+		let hA = 1 - Math.sin( pi2 * ( 1 - cutA / g.equator ) ); // height cap A
+		
+		let rB = rCirc( hB ); // is cut circle radius  rB => height
+		let rA = rCirc( hA ); // is cut circle radius  rA => height
+		
+		// cut circle radius [ px, nx, py, ny, pz, nz ] - for external use
+		g.cutRadius[ cutIdxT[ Math.floor( p / 4 ) ] ] = rT * g.radius;
+		g.cutRadius[ cutIdxB[ p % 4 ] ] = rB * g.radius;
+		g.cutRadius[ cutIdxA[ p % 4 ] ] = rA * g.radius;
+		
+		// distance of the cut circles to the center  [ px, nx, py, ny, pz, nz ] - for external use
+		g.cutDistance[ cutIdxT[ Math.floor( p / 4 ) ] ] = ( 1 - hT ) * g.radius;
+		g.cutDistance[ cutIdxB[ p % 4 ] ] = ( 1 - hB ) * g.radius;
+		g.cutDistance[ cutIdxA[ p % 4 ] ] = ( 1 - hA ) * g.radius;
+		
+		//   edge B
+		
+		for ( let i = cutT, k = 0 ; i <= iB ; i ++ , k ++ ) {  
+			
+			yB[ i ] = yT - ( yT - rB ) * scale( k / (  iB - cutT ) );
+			
+		}
+		
+		for ( let i = iB + 1 ; i <= g.equator; i ++ ) { 
+			
+			yB[ i ] = rB * Math.cos( pi2 * ( i - iB ) / cutB );
+			
+		}
+		
+		//  edge A
+		
+		for ( let i = cutT, k = 0 ; i <= iA ; i ++ , k ++ ) {  
+			
+			yA[ i ] = yT - ( yT - rA ) * scale( k / (  iA - cutT ) );
+			
+		}
+		
+		for ( let i = iA + 1 ; i <= g.equator; i ++ ) { 
+			
+			yA[ i ] = rA * Math.cos( pi2 * ( i - iA ) / cutA );
+			
+		}
+		
+		// positions, uv's
+		
+		for ( let i = cutT; i <= g.equator; i ++ ) {
+			
+			if ( i === 0 && cutT === 0 ) {
+				
+				g.vertices[ posIdx     ] = 0;
+				g.vertices[ posIdx + 1 ] = signY * g.radius;
+				g.vertices[ posIdx + 2 ] = 0;
+				
+				posIdx += 3;
+				
+				g.uvs[ uvIdx ] = 0.5;
+				g.uvs[ uvIdx  + 1 ] = 1;
+				
+				uvIdx += 2;
+				
+			}
+			
+			vCount = i + 1 - ( i > iB ? i - iB : 0 ) - ( i > iA ? i - iA : 0 );
+			
+			if ( i === cutT && cutT !== 0 ) {
+				
+				phi = 0;
+				
+				for ( let j = 0; j <= vCount - 1 ; j ++ ) {
+					
+					x = rT * Math.sin( pi2 * j / ( vCount - 1 ) );
+					y = yT;
+					z = rT * Math.cos( pi2 * j / ( vCount - 1 ) );
+					
+					g.vertices[ posIdx     ] = signX * g.radius * x;
+					g.vertices[ posIdx + 1 ] = signY * g.radius * y;
+					g.vertices[ posIdx + 2 ] = signZ * g.radius * z;
+					
+					posIdx += 3;
+					
+					phi +=  pi2 / vCount;
+					
+					x += 0.4 * x * ( 1 - Math.cos( pi2 * y ) );
+					z += 0.4 * z * ( 1 - Math.cos( pi2 * y ) );
+					uvu = ( Math.asin( x ) + Math.acos( z ) ) / 2 / pi2;
+					
+					g.uvs[ uvIdx ] = spin ? 1 - uvu : uvu ;
+					g.uvs[ uvIdx + 1 ] = Math.asin( y ) / pi2;
+					
+					uvIdx += 2;
+					
+				}
+				
+			}
+			
+			if ( i > cutT ) { 
+				
+				//  ( 0 )
+				
+				if ( i <= iB ) {
+					
+					x0 = 0;
+					y0 = yB[ i ];
+					z0 = Math.sqrt( 1 - yB[ i ] * yB[ i ] );
+					
+				} else {
+					
+					x0 = rB * Math.sin( pi2 * ( i - iB ) / cutB  );
+					y0 = rB * Math.cos( pi2 * ( i - iB ) / cutB );
+					z0 = 1 - hB;
+					
+				}
+				
+				//  ( 1 )
+				
+				if ( i <= iA ) {
+					
+					x1 = Math.sqrt( 1 - yA[ i ] * yA[ i ] );
+					y1 = yA[ i ];
+					z1 = 0;
+					
+				} else {
+					
+					x1 = 1 - hA; 
+					y1 = rA * Math.cos( pi2 * ( i - iA ) / cutA );
+					z1 = rA * Math.sin( pi2 * ( i - iA ) / cutA );
+					
+				}
+				
+				// row verices - not always horizontal
+				
+				dx = x1 - x0;
+				dy = y1 - y0;
+				dz = z1 - z0; 
+				
+				for ( let j = 0; j <= vCount - 1 ; j ++ ) {	
+					
+					x = x0 + j / ( vCount - 1 ) * dx;
+					y = y0 + j / ( vCount - 1 ) * dy;  
+					z = z0 + j / ( vCount - 1 ) * dz; 
+					
+					t = Math.sqrt( ( 1 - y * y ) / ( x * x + z * z ) ); // to move the point horizontally onto the sphere
+					
+					x = t * x;
+					//y = y;
+					z = t * z;
+					
+					g.vertices[ posIdx     ] = signX * g.radius * x;
+					g.vertices[ posIdx + 1 ] = signY * g.radius * y;
+					g.vertices[ posIdx + 2 ] = signZ * g.radius * z;
+					
+					posIdx += 3;
+					
+					x += 0.4 * x * ( 1 - Math.cos( pi2 * y ) );
+					z += 0.4 * z * ( 1 - Math.cos( pi2 * y ) );
+					uvu = ( Math.asin( x ) + Math.acos( z ) ) / 2 / pi2;
+					
+					g.uvs[ uvIdx ] = spin ? 1 - uvu : uvu;
+					g.uvs[ uvIdx + 1 ] = Math.asin( y ) / pi2;
+					
+					uvIdx += 2;
+					
+				}
+				
+			}
+			
+		}
+		
+	}
+	
+}
+
+exports.createSphereCut = createSphereCut;
+exports.buildCutSymm = buildCutSymm;
+exports.buildCut = buildCut;
 
 // ..................................... Helper ...................................................
 

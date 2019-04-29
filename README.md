@@ -793,3 +793,74 @@ var mesh = new THREE.Mesh( gWall, material );
 scene.add( mesh );
 
  ``` 
+
+ ---
+
+.................................................................... Sphere Cut ..............................................................................
+
+Sphere with up to 6 coordinate planes parallel holes.
+There are two different designs of the faces.
+The variants:
+- completely symmetrical
+- efficiently
+
+The geometry is realized as indexed BufferGeometry and supports MultiMaterial. 
+
+```javascript
+	geometry = new THREE.BufferGeometry();
+	
+	g.createSphereCut = THREEg.createSphereCut;
+        g.createSphereCut( p );
+
+	// mesh
+	mesh = new THREE.Mesh( geometry, materials ); // multimaterial array with 8 materials
+        scene.add( mesh );
+
+ ``` 
+
+
+parameters: 
+
+	p = {
+		radius,
+		equator, // set to divisible by 4 if symmetric (min 8)
+		cut, // array, [ px, nx, py, ny, pz, nz ] if symmetric max. 1/2 equator, otherwise equator, non-overlapping
+		parts, // array, value 1 for octant, otherwise arbitrary - upper counterclockwise, lower clockwise
+		symmetric // default is false
+	}	
+
+
+
+####  EXAMPLE:
+
+From the geometry some values can be used for the connection with other forms.
+
+g.radius,  g.cutRadius[ ], g.cutSegments[ ], g.cutDistance[ ]
+
+```javascript
+const g = new THREE.BufferGeometry( );
+g.createSphereCut = THREEg.createSphereCut;
+g.createSphereCut( { 
+		radius: 2,
+		equator: 38, // is set to divisible by 4 (= 40) if symmetric: true
+		cut: [ 6, 3, 10, 11, 12, 0 ], // if symmetric max. 1/2 equator, otherwise equator, non-overlapping
+		parts: [ 1, 1, 1, 1, 1, 0, 0, 1 ], //  1 for create part, otherwise arbitrary
+		//symmetric: true // default is false
+} );
+
+const mesh = new THREE.Mesh( g, material );  // multimaterial array with 8 materials
+scene.add( mesh );
+
+const cyliGeo0 = new THREE.CylinderBufferGeometry( g.cutRadius[ 0 ], g.cutRadius[ 0 ], g.radius, g.cutSegments[ 0 ], 4, true );
+const cyli0 = new THREE.Mesh( cyliGeo0, new THREE.MeshBasicMaterial( { color: 0x0000aa, side: THREE.DoubleSide, wireframe: true } ), );
+scene.add( cyli0 );
+cyli0.rotation.z = Math.PI / 2;
+cyli0.position.x = g.radius / 2 + g.cutDistance[ 0 ];
+
+const cyliGeo2 = new THREE.CylinderBufferGeometry( g.cutRadius[2], g.cutRadius[2], g.radius, g.cutSegments[ 2 ], 4, true  );
+const cyli2 = new THREE.Mesh( cyliGeo2, new THREE.MeshBasicMaterial( { color: 0x000000, side: THREE.DoubleSide, wireframe: true } ), );
+scene.add( cyli2 );
+cyli2.position.y = g.radius / 2 + g.cutDistance[2];
+
+
+ ``` 

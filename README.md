@@ -872,8 +872,11 @@ Sphere with arbitrarily arranged openings, circular or defined by points on the 
 The geometry is realized as indexed BufferGeometry.
 
 Algorithm based on
+
 de: https://www2.mathematik.tu-darmstadt.de/~ehartmann/cdg0/cdg0n.pdf
+
 en: https://www2.mathematik.tu-darmstadt.de/~ehartmann/cdgen0104.pdf
+
 (simplified for sphere)
 
 ```javascript

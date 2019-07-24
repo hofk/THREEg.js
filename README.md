@@ -871,9 +871,9 @@ cyli2.position.y = g.radius / 2 + g.cutDistance[2];
 Sphere with arbitrarily arranged openings, circular or defined by points on the sphere.
 The geometry is realized as indexed BufferGeometry.
 
-// Algorithm based on
-// de: https://www2.mathematik.tu-darmstadt.de/~ehartmann/cdg0/cdg0n.pdf
-// en: https://www2.mathematik.tu-darmstadt.de/~ehartmann/cdgen0104.pdf
+Algorithm based on
+de: https://www2.mathematik.tu-darmstadt.de/~ehartmann/cdg0/cdg0n.pdf
+en: https://www2.mathematik.tu-darmstadt.de/~ehartmann/cdgen0104.pdf
 (simplified for sphere)
 
 ```javascript
@@ -885,8 +885,10 @@ g.createSphereWithHoles( detail, holes );
 
  ``` 
 
-parameters:  
-detail:  Math.PI / detail  is rough side length of the triangles 
+parameters: 
+
+detail:  Math.PI / detail  is rough side length of the triangles
+
 holes (optional): array of arrays of holes
 
 ####  EXAMPLE:

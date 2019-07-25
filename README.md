@@ -797,6 +797,7 @@ scene.add( mesh );
  ---
 
 .................................................................... Sphere Cut ..............................................................................
+
 *see also TriangulationSphereWithHoles in addon THREEi.js (implicit surface)*
 
 Sphere with up to 6 coordinate planes parallel holes.

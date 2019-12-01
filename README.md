@@ -7,6 +7,7 @@ The addon generates indexed or non indexed BufferGeometries. Non indexed allows 
 @author hofk / http://sandbox.threejs.hofk.de/
  or http://sandboxthreeg.threejs.hofk.de/
  
+Replace from revision 110 .addAttribute with .setAttribute.
 
 For more efficiency.
 

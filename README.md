@@ -4,6 +4,8 @@
 
 The addon generates indexed or non indexed BufferGeometries. Non indexed allows an explosion representation.
 
+*License identical to three.js*
+
 @author hofk / http://sandbox.threejs.hofk.de/
  or http://sandboxthreeg.threejs.hofk.de/
  

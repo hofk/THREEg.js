@@ -710,7 +710,7 @@ const  tex1 = new THREE.TextureLoader().load( 'uvgrid01.png' );
 const  tex2 = new THREE.TextureLoader().load( 'beech.jpg' );
 const  tex3 = new THREE.TextureLoader().load( 'water.png' ); 
 
-var materials = [  	
+const materials = [  	
 	new THREE.MeshPhongMaterial( { map: tex3, side: THREE.DoubleSide } ),
 	new THREE.MeshPhongMaterial( { map: tex2, side: THREE.DoubleSide } ), 
  	new THREE.MeshPhongMaterial( { map: tex1, side: THREE.DoubleSide } ),

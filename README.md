@@ -656,7 +656,74 @@ var fullProfile = new THREE.Mesh( geometry, materials );
 scene.add( fullProfile );
 
  ``` 
-  
+
+  ---
+
+..................................... Profiled Contour UV ...................................................
+
+Creates group of frame strips, uses non indexed BufferGeometry
+Each an array with the 2D coordinates of the profile shape and the frame contour is required.
+
+ ## The material array must be called  materials .
+
+```javascript
+	const frame = new THREE.Group( );	
+	frame.createProfiledContourUV = THREEg.createProfiledContourUV;
+	// ......................................................... matPerSquare, contourClosed 
+        frame.createProfiledContourUV( profileShape, contour, materials, false , true );
+        scene.add( frame );
+
+ ``` 
+
+parameters:
+
+ 	profileShape: array with coordinate pairs
+ 	contour: array  with coordinate pairs
+ 
+ optional are
+
+ 	matPerSquare:  if false (default)  one material per frame strip
+	contourClosed: if true (default) the last point is connected to the first one
+
+
+Include: <script src="THREEg.js"></script>
+
+#### EXAMPLE:
+
+```javascript
+
+const profileShape = [ -0.8,1, 1.1,0.6, 0.9,-1.4, 0.5, -2.8,  -1.1,-1.3, -0.8,1 ];
+
+const contour = [
+	-3,  4,
+	 0,  4,// here only to show that angle of 180° horizontal works  
+	 4,  4,
+	 2,  1,
+	 4, -2,
+	 0, -3,
+	-4, -3,
+	-4,  0
+];
+
+const  tex1 = new THREE.TextureLoader().load( 'uvgrid01.png' );
+const  tex2 = new THREE.TextureLoader().load( 'beech.jpg' );
+const  tex3 = new THREE.TextureLoader().load( 'water.png' ); 
+
+var materials = [  	
+	new THREE.MeshPhongMaterial( { map: tex3, side: THREE.DoubleSide } ),
+	new THREE.MeshPhongMaterial( { map: tex2, side: THREE.DoubleSide } ), 
+ 	new THREE.MeshPhongMaterial( { map: tex1, side: THREE.DoubleSide } ),
+	new THREE.MeshPhongMaterial( { color: 0x008601, side: THREE.DoubleSide } ),
+	new THREE.MeshPhongMaterial( { color: 0x01bbbb, side: THREE.DoubleSide } ),		
+]
+
+const frame = new THREE.Group( );
+frame.createProfiledContourUV = THREEg.createProfiledContourUV;
+//........................................................... matPerSquare, contourClosed 
+frame.createProfiledContourUV( profileShape, contour, materials, false, true );
+scene.add( frame );
+
+ ``` 
 
  ---
 

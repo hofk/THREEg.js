@@ -1,4 +1,4 @@
-// THREEg.js ( rev 106.0 )
+// THREEg.js ( rev 117.0 )
 
 /**
  * @author hofk / http://threejs.hofk.de/

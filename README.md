@@ -659,7 +659,7 @@ scene.add( fullProfile );
 
   ---
 
-..................................... Profiled Contour UV ...................................................
+.................................................  Profiled Contour UV ............ ...................................................
 
 Creates group of frame strips, uses non indexed BufferGeometry.
 

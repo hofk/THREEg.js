@@ -661,10 +661,11 @@ scene.add( fullProfile );
 
 ..................................... Profiled Contour UV ...................................................
 
-Creates group of frame strips, uses non indexed BufferGeometry
+Creates group of frame strips, uses non indexed BufferGeometry.
+
 Each an array with the 2D coordinates of the profile shape and the frame contour is required.
 
- ## The material array must be called  materials .
+ ##### The material array must be called  materials .
 
 ```javascript
 	const frame = new THREE.Group( );	

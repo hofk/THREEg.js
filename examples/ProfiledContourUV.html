@@ -11,9 +11,9 @@
 </head>
 <body> </body>
 
-<script src="three.min.117.js"></script>
-<script src="OrbitControls.117.js"></script>
-<script src="THREEg.js"></script>
+<script src="../js/three.min.117.js"></script>
+<script src="../js/OrbitControls.117.js"></script>
+<script src="../js/THREEg.js"></script>
 
 <script>
 'use strict'
@@ -70,24 +70,27 @@ const  tex3 = new THREE.TextureLoader().load( 'pngwing-com-water.png' );// Licen
 const m0 = new THREE.MeshPhongMaterial( { map: tex3, side: THREE.DoubleSide } );
 const m1 = new THREE.MeshPhongMaterial( { map: tex2, side: THREE.DoubleSide } );
 const m2 = new THREE.MeshPhongMaterial( { map: tex1, side: THREE.DoubleSide } );
-const m3 = new THREE.MeshPhongMaterial( { color: 0x008601, side: THREE.DoubleSide } );
-const m4 = new THREE.MeshPhongMaterial( { color: 0x01bbbb, side: THREE.DoubleSide } );
-const m5 = new THREE.MeshPhongMaterial( { color: 0x250290, side: THREE.DoubleSide } );
 
-//const m3 = new THREE.MeshPhongMaterial( { map: tex1, side: THREE.DoubleSide } );
-//const m4 = new THREE.MeshPhongMaterial( { map: tex1, side: THREE.DoubleSide } );
-//const m5 = new THREE.MeshPhongMaterial( { map: tex1, side: THREE.DoubleSide } );
+//const m3 = new THREE.MeshPhongMaterial( { color: 0x008601, side: THREE.DoubleSide } );
+//const m4 = new THREE.MeshPhongMaterial( { color: 0x01bbbb, side: THREE.DoubleSide } );
+//const m5 = new THREE.MeshPhongMaterial( { color: 0x250290, side: THREE.DoubleSide } );
+
+const m3 = new THREE.MeshPhongMaterial( { map: tex2, side: THREE.DoubleSide } );
+const m4 = new THREE.MeshPhongMaterial( { map: tex3, side: THREE.DoubleSide } );
+const m5 = new THREE.MeshPhongMaterial( { map: tex1, side: THREE.DoubleSide } );
 
 const m6 = new THREE.MeshPhongMaterial( { color: 0xfc4ea5, side: THREE.DoubleSide } );
 const m7 = new THREE.MeshPhongMaterial( { color: 0x83058a, side: THREE.DoubleSide } );
 const m8 = new THREE.MeshPhongMaterial( { color: 0x83058a, side: THREE.DoubleSide } );
 
+
+
 const materials = [ m0, m1, m2, m3, m4, m5, m6, m7, m8, m0, m1, m2, m3, m4, m5, m6, m7, m8, m0, m1, m2, m3, m4, m5, m6, m7, m8, m0, m1, m2, m3, m4, m5, m6, m7, m8, m0, m1, m2, m3, m4, m5, m6, m7, m8, m0, m1, m2, m3, m4, m5, m6, m7, m8, m0, m1, m2, m3, m4, m5, m6, m7, m8, m0, m1, m2, m3, m4, m5, m6, m7, m8, m0, m1, m2, m3, m4, m5, m6, m7, m8 ];
  
 const frame1 = new THREE.Group( );
 frame1.createProfiledContourUV = THREEg.createProfiledContourUV;
-//........................................................... matPerSquare, contourClosed 
-frame1.createProfiledContourUV( profileShape1, contour1, materials, false , true );
+//........................................................... matPerSquare, contourClosed, openEnded 
+frame1.createProfiledContourUV( profileShape1, contour1, materials, false , false, false );
 frame1.position.x = -5;
 frame1.position.z = 3;
 frame1.rotation.y = 2.8;
@@ -95,7 +98,7 @@ scene.add( frame1 );
 
 const frame2 = new THREE.Group( );
 frame2.createProfiledContourUV = THREEg.createProfiledContourUV;
-//......................................................... matPerSquare, contourClosed 
+//......................................................... matPerSquare, contourClosed, openEnded 
 frame2.createProfiledContourUV( profileShape2, contour2, materials, true, false );
 frame2.position.z = -4;
 scene.add( frame2 );

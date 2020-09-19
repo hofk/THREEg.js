@@ -670,8 +670,8 @@ Each an array with the 2D coordinates of the profile shape and the frame contour
 ```javascript
 	const frame = new THREE.Group( );	
 	frame.createProfiledContourUV = THREEg.createProfiledContourUV;
-	// ......................................................... matPerSquare, contourClosed 
-        frame.createProfiledContourUV( profileShape, contour, materials, false , true );
+	// ......................................................... matPerSquare, contourClosed, openEnded 
+        frame.createProfiledContourUV( profileShape, contour, materials, false , true, false );
         scene.add( frame );
 
  ``` 
@@ -685,6 +685,7 @@ parameters:
 
  	matPerSquare:  if false (default)  one material per frame strip
 	contourClosed: if true (default) the last point is connected to the first one
+	openEnded: if true (default) no caps
 
 
 Include: <script src="THREEg.js"></script>
@@ -720,8 +721,8 @@ const materials = [
 
 const frame = new THREE.Group( );
 frame.createProfiledContourUV = THREEg.createProfiledContourUV;
-//........................................................... matPerSquare, contourClosed 
-frame.createProfiledContourUV( profileShape, contour, materials, false, true );
+//........................................................... matPerSquare, contourClosed, openEnded 
+frame.createProfiledContourUV( profileShape, contour, materials, false, true, false );
 scene.add( frame );
 
  ``` 

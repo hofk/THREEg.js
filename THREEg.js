@@ -1,4 +1,4 @@
-// THREEg.js ( rev 117.0 )
+// THREEg.js ( rev 106.0 )
 
 /**
  * @author hofk / http://threejs.hofk.de/
@@ -3461,8 +3461,8 @@ exports.buildProfiledContourMMgeometry = buildProfiledContourMMgeometry;
 
 // .............................  ProfiledContourGeometryUVs  .........................................
 
-function createProfiledContourUV( profileShape, contour, materials, matPerSquare, contourClosed ) {
-											// the last two parameters are optional
+function createProfiledContourUV( profileShape, contour, materials, matPerSquare, contourClosed, openEnded ) {
+											// the last three parameters are optional
 	
 	g = this;  // a THREE.Group( ), a mesh for each frame strip
 	
@@ -3471,6 +3471,7 @@ function createProfiledContourUV( profileShape, contour, materials, matPerSquare
 	
 	g.matPerSquare = matPerSquare!== undefined ? matPerSquare : false;
 	g.contourClosed = contourClosed !== undefined ? contourClosed : true;
+	g.openEnded = openEnded !== undefined ? ( contourClosed === true ? true : openEnded ) : true;
 	
 	if( g.contourClosed ) g.contour.push( g.contour[ 0 ], g.contour[ 1 ] );
 	
@@ -3505,17 +3506,46 @@ function buildProfiledContourUV( ) {
 	
 	vtx.push( [] ); // last colum
 	
+	if(  !g.openEnded ) { // for two ends
+		
+		frmpos.push( [], [] ); // for two ends
+		frmuvs.push( [], []  );
+		
+	}	
+	
 	let gFrame = []; // geometries of frame strips
 	let frame = [];  // meshes of frame strips
 	
-	let i1, i2, i3, i6, j1, j3;
+	let i1, i2, i3, i6, j1, j2;
 	let xc0, yc0, xc1, yc1, xc2, yc2, xSh, xDiv;
 	let dx, dy, dx0, dy0, dx2, dy2;
 	let e0x, e0y,e0Length, e2x, e2y, e2Length, ex, ey, eLength;
 	let xd, phi, bend;
 	let x, y, z, x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4;
-	let a, u1, u2, u3, u4, d2, d3;
+	let x1L, y1L, x2L, y2L, xMin, yMin, xMax, yMax;
+	let a, u1, u1a, u1b, u2, u3, u4, v1, v2, v3, d2, d3;
 	const epsilon = 0.000001;
+
+	xMin = Infinity;
+	yMin = Infinity;
+	xMax = -Infinity;
+	yMax = -Infinity;
+
+	if( !g.openEnded ) {
+	
+		for ( let j = 0; j < rs1; j ++ ) {
+			
+			j2 = 2 * j;
+			
+			if ( g.profileShape[ j2 ] < xMin ) xMin = g.profileShape[ j2 ];
+			if ( g.profileShape[ j2 + 1 ] < yMin ) yMin = g.profileShape[ j2 + 1 ];
+			
+			if ( g.profileShape[ j2 ] > xMax ) xMax = g.profileShape[ j2 ];
+			if ( g.profileShape[ j2 + 1 ] > yMax ) yMax = g.profileShape[ j2 + 1 ];
+				
+		}
+		
+	}		
 	
 	for ( let j = 0; j < rs1; j ++ ) {
 		
@@ -3660,6 +3690,20 @@ function buildProfiledContourUV( ) {
 			vtx[ j ].push( x, y, z );	// store vertex
 			
 			//dApex = xd * Math.cos( phi );
+			
+			if( j === 0 && i === hs && !g.openEnded ) { //center
+				
+				x1L = xc1;
+				y1L = yc1;
+				
+			}
+			
+			if( j === 0 && i === 0 && !g.openEnded ) { //center
+				
+				x2L = xc1;
+				y2L = yc1;
+				
+			}			
 		
 		}
 		
@@ -3668,7 +3712,6 @@ function buildProfiledContourUV( ) {
 	for ( let j = 0; j < rs; j ++ ) {
 		
 		j1 = j + 1;
-		j3 = 3 * j;
 		
 		for ( let i = 0; i < hs; i ++ ) {
 			
@@ -3739,8 +3782,65 @@ function buildProfiledContourUV( ) {
 		}
 		
 	}
+
 	
-	for ( let j = 0; j < rs; j ++ ) {
+	if( !g.openEnded ) {
+		
+		dx = xMax - xMin;
+		dy = yMax - yMin;
+		
+		v1 = -yMin / dy;
+		u1a = -xMin / dx;
+		u1b = 1 - u1a;
+		
+		i3 = 3 * hs;
+		
+		for ( let j = 0; j < rs; j ++ ) {
+			
+			j1 = j + 1;
+			j2 = 2 * j;
+			
+			x1 = vtx[ j ][ 0 ];
+			y1 = vtx[ j ][ 1 ];
+			z1 = vtx[ j ][ 2 ];
+			
+			x2 = vtx[ j1 ][ 0 ];
+			y2 = vtx[ j1 ][ 1 ];
+			z2 = vtx[ j1 ][ 2 ];
+			
+			frmpos[ rs ].push( x2L, y2L, 0, x1, y1, z1, x2, y2, z2 );
+					
+			u2 = ( g.profileShape[ j2 ] - xMin ) / dx;
+			v2 = ( g.profileShape[ j2 + 1 ] - yMin ) / dy;
+			
+			u3 = ( g.profileShape[ j2 + 2 ] - xMin ) / dx;
+			v3 = ( g.profileShape[ j2 + 3 ] - yMin ) / dy;
+			
+			frmuvs[ rs ].push( u1a, v1, u2, v2, u3, v3 );
+			
+			x1 = vtx[ j1 ][ i3 ];
+			y1 = vtx[ j1 ][ i3 + 1 ];
+			z1 = vtx[ j1 ][ i3 + 2 ] ;
+			
+			x2 = vtx[ j ][ i3 ];
+			y2 = vtx[ j ][ i3 + 1 ];
+			z2 = vtx[ j ][ i3 + 2 ];
+			
+			frmpos[ rs1 ].push( x1L, y1L, 0, x1, y1, z1, x2, y2, z2 );
+			
+			u2 = 1 - ( g.profileShape[ j2 + 2 ] - xMin ) / dx;
+			v2 = ( g.profileShape[ j2 + 3 ] - yMin ) / dy;
+
+			u3 = 1 - ( g.profileShape[ j2 ] - xMin ) / dx;
+			v3 = ( g.profileShape[ j2 + 1 ] - yMin ) / dy;
+			
+			frmuvs[ rs1 ].push( u1b, v1, u2, v2, u3, v3 );
+			
+		}
+		
+	}	
+	
+	for ( let j = 0; j < ( g.openEnded ? rs : rs + 2 ); j ++ ) {
 		
 		gFrame[ j ] = new THREE.BufferGeometry( );
 		gFrame[ j ].setAttribute( 'position', new THREE.BufferAttribute( new Float32Array( frmpos[ j ] ), 3 ) );

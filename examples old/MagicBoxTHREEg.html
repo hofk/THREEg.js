@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<!--   *** MagicBox - THREEg - ***
+/**
+ * @author hofk / http://threejs.hofk.de/
+*/
+-->
+<html lang="de">
+<head>
+	<title> Magic Box </title>
+	<meta charset="utf-8" />
+		<style>	
+			
+			#out {
+			
+				overflow: hidden;
+				position: absolute;
+				top: 110px;
+				left: 5px;	
+				width: 500px;
+				height: 500px;
+				z-index: 99;
+				opacity: 0.8;
+				background: #eeeeee;
+				border: 2px solid #bbbbbb;
+				border-radius: 4px;
+				padding: 0px;
+				text-align: left;
+				
+			}
+			
+			input[type="number"] {width:70px}
+			input[type="range"] {width: 400px}
+			
+		</style>
+</head>
+<body bgcolor="#cccccc " >
+	
+	<div style="position: absolute; top: 15px; left:15px; text-align: left;">
+		
+		 Magic Box - example No. 
+		<input type="number" id="example"	min="0" value="0" step="1" > <br />
+		velocity 0
+		<input type="range" id="velocity" min="0" max="10" value="1" step="0.1" > 10 <br />
+		<input type="checkbox" id="vertexIndexes"  > vertex - 
+		<input type="checkbox" id="faceIndexes"  > face indexes 
+		<input type="checkbox" id="normals"  > normals ... size
+		<input type="number"   id="indexSize" min="0" max="0.1" value="0.01" step="0.01" >	<br />
+		<button id="showHidePs" > hide parameters </button> 
+		<div id="out" > </div>
+		
+	</div>
+
+</body>
+
+<script src="three.min.90.js"></script>
+<script src="OrbitControls.js"></script>
+<script src="THREEx.WindowResize.js"></script>
+<script src="THREEg.js"></script>
+
+<script>
+
+'use strict'
+
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 2000 );
+camera.position.set( 1, 2, 3);
+
+var renderer = new THREE.WebGLRenderer( { antialias: true } );
+renderer.setSize( window.innerWidth, window.innerHeight );
+renderer.setClearColor( 0xeeeeee, 1 );
+
+var container = document.createElement( 'div' );
+document.body.appendChild( container );
+container.appendChild( renderer.domElement );
+
+THREEx.WindowResize( renderer, camera );
+var controls = new THREE.OrbitControls( camera, renderer.domElement );
+controls.enableZoom = true;
+
+var light1 = new THREE.PointLight();
+light1.position.set( -2, 2, 4 );
+scene.add( light1 ); 
+var light2 = new THREE.PointLight();
+light2.position.set( -6, -3, -6 );
+scene.add( light2 );
+
+var clock  = new THREE.Clock( true );
+var time;
+
+var mouse = {};
+container.addEventListener('mousemove', onContainerMouseMove );
+
+function onContainerMouseMove( event ) {
+	
+	// some examples react to mouse movement
+	mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+	mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+	
+}
+
+// material
+var uvTex		= new THREE.TextureLoader().load( "uvgrid01.png" );
+var dahliaTex 	= new THREE.TextureLoader().load( "dahlia.png" );
+
+var side = THREE.DoubleSide;
+
+var materials = [
+																						// material index:
+	new THREE.MeshBasicMaterial( { transparent: true, opacity: 0.45, 	side: side } ),	//  0 transparent
+	new THREE.MeshBasicMaterial( { map: uvTex,							side: side } ),	//  1 uv grid
+	new THREE.MeshBasicMaterial( { map: dahliaTex,						side: side } ),	//  2 photo dahlia (free)
+	new THREE.MeshPhongMaterial( { color: 0xff0000, emissive: 0xff0000, side: side,	wireframe: true } ), //  3 red
+	new THREE.MeshPhongMaterial( { color: 0x00ff00, emissive: 0x00ff00, side: side,	wireframe: true } ), //  4 green
+	new THREE.MeshPhongMaterial( { color: 0x0000ff, emissive: 0x0000ff, side: side,	wireframe: true } ), //  5 blue
+	new THREE.MeshPhongMaterial( { color: 0xffff00, emissive: 0xffff00, side: side } ),	//  6 yellow
+	new THREE.MeshPhongMaterial( { color: 0xff00ff, emissive: 0xff00dd, side: side } ),	//  7 magenta
+	new THREE.MeshPhongMaterial( { color: 0x00ffff, emissive: 0x00ffff, side: side } ),	//  8 cyan	
+	new THREE.MeshPhongMaterial( { color: 0xee55ff, emissive: 0x7733dd, side: side, wireframe: true } ), //  9 color
+	new THREE.MeshPhongMaterial( { color: 0x444444, emissive: 0x333333, side: side } )		// 10 grey
+	
+];
+
+var material = new THREE.MeshBasicMaterial( { map: dahliaTex, side: side, wireframe: false } );
+
+var velocity = document.getElementById( "velocity" );
+var example = document.getElementById( "example" );
+var vertexIndexes = document.getElementById( "vertexIndexes" );
+var faceIndexes = document.getElementById( "faceIndexes" );
+var normals = document.getElementById( "normals" );
+var indexSize = document.getElementById( "indexSize" );
+var showHidePs = document.getElementById( "showHidePs" );
+example.onchange = showNewMesh;
+example.onclick = showNewMesh;
+example.onkeyup = showNewMesh;
+vertexIndexes.onchange = showNewMesh;
+faceIndexes.onchange = showNewMesh;
+normals.onchange = showNewMesh;
+indexSize.onchange = showNewMesh;
+showHidePs.onclick = showHideParams;
+
+var parameterExamples = [];
+
+parameterExamples[ 0 ] = { } // all parameters default 
+
+parameterExamples[ 1 ] = {	
+	materials: [ 2, 2, 2, 2, 2, 2,  ,  ,  , 4 ,4 ], 
+	sides : [ 3, 3, 3, 3, 1, 1 ],		
+}
+
+parameterExamples[ 2 ] = {
+	radius: function( t ){ return 0.35 },
+	contourmode: 'profile',
+	profile: function( x, t ){ return x * x * 0.41 },	
+}
+
+
+parameterExamples[ 3 ] = {
+	sides : [ 5, 5, 5, 5, 5, 5 ],
+	contourmode: 'bezier',
+	radius: function( t ){ return 0.5 },
+}
+
+parameterExamples[ 4 ] = {
+	radius: function( t ){ return 0.9 * Math.sin( 0.2 * t ) },	
+}
+
+parameterExamples[ 5 ] = {
+	sides : [ 3, 3, 3, 3, 1, 1 ],
+	waffleDeep: function( t ){ return 0.15 * Math.sin( 0.5 * t ) },	
+}
+
+parameterExamples[ 6 ] = {
+	contourmode: 'profile',
+	sides : [ 6, 6, 4, 4, 4, 4 ],
+	radius: function( t ){ return 0.2 },	
+	profile: function( x, t ){ return Math.sqrt( x ) * ( 0.2 + 0.4 * Math.abs( Math.sin( t ) ) ) },	
+}
+
+parameterExamples[ 7 ] = {
+	widthSegments: 8,
+	width: function( t ){ return 0.5 +  Math.sin( 0.5 * t ) * Math.sin( 0.5 * t ) },
+}
+
+parameterExamples[ 8 ] = {	
+	contourmode: 'linear',
+	radius: function( t ){ return 0.44 },	
+}
+
+function lidAngle( t ) { return Math.sin( 0.5 * t ) * Math.sin( 0.5 * t ) } // all identical
+parameterExamples[ 9 ] = {
+	lidAngle0: lidAngle,
+	lidAngle1: lidAngle,
+	lidAngle2: lidAngle,
+	lidAngle3: lidAngle,
+	lidAngle4: lidAngle,
+	lidAngle5: lidAngle,
+	lidHinges: [ 1, 0, 1, 0, 1, 0 ],
+}
+
+parameterExamples[ 10 ] = {
+	contourmode: 'linear',
+	radius: function( t ){ return 0.33 },
+	pointX: function( t ){ return Math.sin( 0.5 * t ) * Math.sin( 0.5 * t ) },
+	pointY: function( t ){ return 0.5 },
+}
+
+parameterExamples[ 11 ] = {
+	sides: [ 1,1,1,0,0,1 ],
+	widthSegments: 5,
+	heightSegments: 5,
+	depthSegments: 5,
+	radius: function( t ){ return 0.28 },	
+	materials: [ 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10 ],
+	explodemode: 'center', // is default
+	explode: function( t ){ return 0.4 * ( 1 + Math.sin( 0.5 * t ) ) },
+}
+
+parameterExamples[ 12 ] = {
+	sides: [ 1,1,1,0,0,1 ],
+	widthSegments: 5,
+	heightSegments: 5,
+	depthSegments: 5,
+	radius: function( t ){ return 0.28 },	
+	materials: [ 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7 ],
+	explodemode: 'normal',
+	explode: function( t ){ return 0.4 * ( 1 + Math.sin( 0.5 * t ) ) },
+}
+
+parameterExamples[ 13 ] = {
+	smoothness: 12,
+	contourmode: 'bezier',
+	radius: function( t ){ return 0.35 },
+	pointX: function( t ){ return 0.6 },
+	pointY: function( t ){ return 2.4 },	
+}
+
+parameterExamples[ 14 ] = {
+	explode: function( t ){ return 0.1 },
+}
+
+parameterExamples[ 15 ] = {
+	smoothness: 1,
+	radius: function( t ){ return 0.08 + 0.08 * Math.sin( 0.5 * t ) },
+	materials: [ 3, 3, 4, 4, 5, 5, 9, 9, 9, 9, 9 ],
+	width: function( t ){ return 0.7 + 0.3 * Math.sin( 0.5 * t ) },
+	height: function( t ){ return 0.7 + 0.3 * Math.cos( 0.5 * t ) },
+	depth: function( t ){ return 0.7 + 0.3 * Math.cos( 0.5 * t ) * Math.sin( 0.5 * t ) },
+}
+
+function widthFunc( t ){ return t % 100 * mouse.x / 10 } // use mouse
+function depthFunc( t ){ return mouse.y }
+parameterExamples[ 16 ] = {
+	width: widthFunc,
+	depth: depthFunc,
+}
+
+parameterExamples[ 17 ] = {
+	widthSegments: 8,
+	heightSegments: 8,
+	depthSegments: 8,
+	materials: [ 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10 ],
+	rounding: function( t ){ return 4 },
+	waffleDeep: function( t ) { return  mouse.y % Math.floor( t ) }, // use mouse
+}
+
+parameterExamples[ 18 ] = {
+	sides: [ 1,1,0,1,1,1 ],
+	materials: [ 2, 2, 2, 2, 2, 2, 6, 6, 6, 10, 10 ],
+	smoothness: 12,
+	rounding: function( t ){ return 8 },
+}
+
+parameterExamples[ 19 ] = {
+	sides: [ 0 ],
+	widthSegments: 5,
+	heightSegments: 5,
+	depthSegments: 5,
+	smoothness: 5,
+	radius: function( t ){ return 0.2 },	
+	materials: [ 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5 ],	
+}
+
+parameterExamples[ 20] = {
+	sides: [ 7,7,7,7 ],
+	materials: [ 10, 10, 10, 10, 10, 10 ],	
+	radius: function( t ){ return 0 },
+	widthSegments: 5,
+	heightSegments: 5,
+	depthSegments: 5,
+	explode: function( t ){ return 0.02 },
+}
+
+parameterExamples[ 21] = {
+	
+}
+
+var geometry;
+var mesh;
+var indexesMode;
+var vertexFaceNumbersHelper;
+var vertexNormalsHelper;
+var v;		// velocity
+
+var showGeo = true;
+var showParams = false;
+out.innerHTML = "";
+out.style.visibility = 'visible';
+showNewMesh( );
+
+animate();
+
+//............................
+function showHideParams(  ) {
+	
+	if ( showParams ) {
+		
+		showHidePs.innerHTML = "hide parameters";
+		out.style.visibility = 'visible';
+		
+	} else {
+		
+		showHidePs.innerHTML = "show parameters";
+		out.style.visibility = 'hidden';
+		
+	}
+	
+	showParams = !showParams;
+	
+}
+
+function showNewMesh( ) {
+	
+	if ( mesh ) {
+		
+		scene.remove(mesh);
+		geometry.dispose();
+		
+	}
+	
+	if ( vertexFaceNumbersHelper ) {
+		
+		scene.remove( vertexFaceNumbersHelper );
+		
+	}
+	
+	if ( vertexNormalsHelper ) {
+		
+		scene.remove( vertexNormalsHelper );
+		vertexNormalsHelper.geometry.dispose();
+		
+	}
+		
+	var parameters = parameterExamples[ example.value ];
+	
+	out.innerHTML = " parameters = {  <br /> "
+	
+	if ( parameters.widthSegments !== undefined ) out.innerHTML += " widthSegments: " + parameters.widthSegments + ", <br />";
+	if ( parameters.heightSegments !== undefined ) out.innerHTML += " heightSegments: " + parameters.heightSegments + ", <br />";
+	if ( parameters.depthSegments !== undefined ) out.innerHTML += " depthSegments: " + parameters.depthSegments + ", <br />";
+	
+	if ( parameters.smoothness !== undefined ) out.innerHTML += " smoothness: " + parameters.smoothness + ", <br />";
+	if ( parameters.uvmode !== undefined ) out.innerHTML += " uvmode: " + parameters.uvmode + ", <br />";
+	if ( parameters.contourmode !== undefined ) out.innerHTML += " contourmode: " + "\'" + parameters.contourmode + "\'" + ", <br />";
+	if ( parameters.explodemode !== undefined ) out.innerHTML += " explodemode: " + "\'" + parameters.explodemode + "\'" + ", <br />";
+	
+	if ( parameters.sides !== undefined ) out.innerHTML += " sides: [" + parameters.sides + " ], <br />";
+	if ( parameters.lidHinges !== undefined ) out.innerHTML += " lidHinges: [" + parameters.lidHinges + " ], <br />";
+	if ( parameters.materials !== undefined ) out.innerHTML += " materials: [" + parameters.materials + " ], <br />";
+	
+	if ( parameters.width !== undefined ) out.innerHTML += " width: " + parameters.width + ", <br />";
+	if ( parameters.height !== undefined ) out.innerHTML += " height: " + parameters.height + ", <br />";
+	if ( parameters.depth !== undefined ) out.innerHTML += " depth: " + parameters.depth + ", <br />";
+	
+	if ( parameters.waffleDeep !== undefined ) out.innerHTML += " waffleDeep: " + parameters.waffleDeep + ", <br />";
+	
+	if ( parameters.radius !== undefined ) out.innerHTML += " radius: " + parameters.radius + ", <br />";
+	if ( parameters.rounding !== undefined ) out.innerHTML += " rounding: " + parameters.rounding + ", <br />";
+	if ( parameters.profile !== undefined ) out.innerHTML += " profile: " + parameters.profile + ", <br />";
+	
+	if ( parameters.pointX !== undefined ) out.innerHTML += " pointX: " + parameters.pointX + ", <br />";
+	if ( parameters.pointY !== undefined ) out.innerHTML += " pointY: " + parameters.pointY + ", <br />";
+	
+	if ( parameters.lidAngle0 !== undefined ) out.innerHTML += " lidAngle0: " + parameters.lidAngle0 + ", <br />";
+	if ( parameters.lidAngle1 !== undefined ) out.innerHTML += " lidAngle0: " + parameters.lidAngle1 + ", <br />";
+	if ( parameters.lidAngle2 !== undefined ) out.innerHTML += " lidAngle0: " + parameters.lidAngle2 + ", <br />";
+	if ( parameters.lidAngle3 !== undefined ) out.innerHTML += " lidAngle0: " + parameters.lidAngle3 + ", <br />";
+	if ( parameters.lidAngle4 !== undefined ) out.innerHTML += " lidAngle0: " + parameters.lidAngle4 + ", <br />";
+	if ( parameters.lidAngle5 !== undefined ) out.innerHTML += " lidAngle0: " + parameters.lidAngle5 + ", <br />";
+	
+	if ( parameters.explode !== undefined ) out.innerHTML += " explode: " + parameters.explode + ", <br />";
+	
+	out.innerHTML += " } "
+	
+	if ( example.value < 1 ) {
+		
+		out.innerHTML += " <br /> <br /> Without parameters a quite simple box. <br /> <br /> ";
+		out.innerHTML += " Copy and modify the parameter examples. <br /> <br /> "
+		out.innerHTML += " Include script src='THREEg.js' <br /><br />"
+		out.innerHTML += " Use: <br /> "
+		out.innerHTML += "	geometry = new THREE.BufferGeometry(); <br />"
+		out.innerHTML += "	geometry.createMagicBox = THREEg.createMagicBox; <br />"
+		out.innerHTML += "	geometry.createMagicBox( parameters ); <br />"
+		out.innerHTML += "	mesh = new THREE.Mesh( geometry, materials ) <br /> <br />"
+		out.innerHTML += "	You get a non-indexed BufferGeometry, a so-called triangle soup.<br /> <br />"
+		out.innerHTML += " Some examples react to mouse movement. "
+		
+	}
+	
+	geometry = new THREE.BufferGeometry();
+	geometry.createMagicBox = THREEg.createMagicBox; // insert the methode from THREEg.js
+	geometry.createMagicBox( parameters ); // apply the methode
+	
+	// mesh
+	mesh = new THREE.Mesh( geometry, materials );
+	//mesh = new THREE.Mesh( geometry, material );
+	
+	indexesMode = 0;
+	indexesMode += vertexIndexes.checked ? 1 : 0;
+	indexesMode += faceIndexes.checked ? 2 : 0;
+	
+	if ( indexesMode > 0 ) {
+		
+		vertexFaceNumbersHelper = new THREEg.vertexFaceNumbersHelper( mesh, indexesMode, indexSize.value, 0x0000aa );
+		vertexFaceNumbersHelper.update( indexesMode );
+		
+	}
+	
+	if ( normals.checked ) {
+		
+		vertexNormalsHelper = new THREE.VertexNormalsHelper( mesh, indexSize.value, 0x222222, 1 );	
+		scene.add( vertexNormalsHelper);
+		vertexNormalsHelper.update();
+		
+	}
+	
+	scene.add( mesh );
+	
+	showGeo = true;	// start animation
+	
+}
+
+function animate( ) {
+	
+	requestAnimationFrame( animate );
+	
+	if ( showGeo ) {
+		
+		time = clock.getElapsedTime( );
+		v = velocity.value;
+		
+		geometry.morphVerticesMagicBox( v * time );
+		
+		if (  indexesMode > 0 ) {
+			
+			vertexFaceNumbersHelper.update( indexesMode );
+			
+		}
+		
+		if ( normals.checked ) {
+		
+			vertexNormalsHelper.update();
+			
+		}	
+		
+	}
+	
+	renderer.render( scene, camera );
+	controls.update( );
+	
+}
+</script>
+
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<head>
+	<title> SphereCutTHREEg </title>
+	<meta charset="utf-8" />
+	<style>
+	body {
+		margin: 0;
+	}
+    </style>
+</head>
+<body> 	</body>
+<script src="../js/three.min.104.js"></script>
+<script src="../js/OrbitControls.js"></script>
+<script src="../js/THREEg.js"></script>
+<script>
+
+// @author hofk
+
+'use strict';
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera( 55, window.innerWidth / window.innerHeight, 0.01, 1000 );
+camera.position.set( 2, 6, 10 );
+const renderer = new THREE.WebGLRenderer( { antialias: true } );
+renderer.setSize( window.innerWidth, window.innerHeight );
+renderer.setClearColor(  0xaaaaaa, 1 );	
+const container = document.createElement( 'div' );
+document.body.appendChild( container );
+container.appendChild( renderer.domElement ); 
+const controls = new THREE.OrbitControls( camera, renderer.domElement );
+const axesHelper = new THREE.AxesHelper( 2 );
+scene.add( axesHelper );
+
+const tex1 = new THREE.TextureLoader().load( 'uvgrid01.png' );
+const tex2 = new THREE.TextureLoader().load( 'dahlia.png' );
+
+const material = [
+	new THREE.MeshBasicMaterial( { map: tex1, side: THREE.DoubleSide } ),
+	new THREE.MeshBasicMaterial( { color: 0xff0000, side: THREE.DoubleSide, wireframe: true } ),
+	new THREE.MeshBasicMaterial( { color: 0xff00ff, side: THREE.DoubleSide } ),
+	new THREE.MeshBasicMaterial( { color: 0x00ffff, side: THREE.DoubleSide, wireframe: true } ),
+	new THREE.MeshBasicMaterial( { color: 0xffff00, side: THREE.DoubleSide } ),
+	new THREE.MeshBasicMaterial( { map: tex2, side: THREE.DoubleSide, wireframe: false } ),
+	new THREE.MeshBasicMaterial( { color: 0x33ff55, side: THREE.DoubleSide } ),
+	new THREE.MeshBasicMaterial( { map: tex1, side: THREE.DoubleSide } )
+]
+
+const g = new THREE.BufferGeometry( );
+g.createSphereCut = THREEg.createSphereCut;
+g.createSphereCut( { 
+		radius: 2,
+		equator: 38, // is set to divisible by 4 (= 40) if symmetric: true
+		cut: [ 6, 3, 10, 11, 12, 0 ], // if symmetric max. 1/2 equator, otherwise equator, non-overlapping
+		parts: [ 1, 1, 1, 1, 1, 0, 0, 1 ], //  1 for create part, otherwise arbitrary
+		//symmetric: true // default is false
+} );
+
+const mesh = new THREE.Mesh( g, material );
+scene.add( mesh );
+
+const cyliGeo0 = new THREE.CylinderBufferGeometry( g.cutRadius[ 0 ], g.cutRadius[ 0 ], g.radius, g.cutSegments[ 0 ], 4, true );
+const cyli0 = new THREE.Mesh( cyliGeo0, new THREE.MeshBasicMaterial( { color: 0x0000aa, side: THREE.DoubleSide, wireframe: true } ), );
+scene.add( cyli0 );
+cyli0.rotation.z = Math.PI / 2;
+cyli0.position.x = g.radius / 2 + g.cutDistance[ 0 ];
+
+const cyliGeo2 = new THREE.CylinderBufferGeometry( g.cutRadius[2], g.cutRadius[2], g.radius, g.cutSegments[ 2 ], 4, true  );
+const cyli2 = new THREE.Mesh( cyliGeo2, new THREE.MeshBasicMaterial( { color: 0x000000, side: THREE.DoubleSide, wireframe: true } ), );
+scene.add( cyli2 );
+cyli2.position.y = g.radius / 2 + g.cutDistance[2];
+
+animate();
+
+function animate() {
+
+	requestAnimationFrame( animate );	
+	renderer.render( scene, camera );
+	controls.update();
+	
+}
+
+</script>
+
+</html>

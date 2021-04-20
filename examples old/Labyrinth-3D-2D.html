@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<!-- @author hofk -->
+<head>
+	<title> Labyrinth-3D-2D </title>
+	<meta charset="utf-8" />
+</head>
+<body>  </body>
+	<script src="three.min.98.js"></script>
+	<script src="OrbitControls.js"></script>
+	<script src="THREEx.WindowResize.js"></script>
+	<script src="THREEg.js"></script>
+<script>
+
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 100 );
+camera.position.set( 0, 10, 40 );
+var renderer = new THREE.WebGLRenderer( { antialias: true } );
+renderer.setSize( window.innerWidth, window.innerHeight );
+renderer.setClearColor( 0xdddddd, 1 );	
+var container = document.createElement( 'div' );
+document.body.appendChild( container );
+container.appendChild( renderer.domElement ); 
+THREEx.WindowResize( renderer, camera );
+var controls = new THREE.OrbitControls( camera, renderer.domElement );
+
+//var material = new THREE.MeshBasicMaterial( { color: 0xff0000, side: THREE.DoubleSide, wireframe: true } );
+
+var texture0	= new THREE.TextureLoader().load( "brick.jpg" );
+var texture1	= new THREE.TextureLoader().load( "uvSpray.png" );
+var texture2	= new THREE.TextureLoader().load( "Granit.jpg" );
+var texture3	= new THREE.TextureLoader().load( "kunst1.png" );
+var texture4	= new THREE.TextureLoader().load( "uvgrid01.png" );
+var texture5	= new THREE.TextureLoader().load( "Fliese03.png" );
+var texture6	= new THREE.TextureLoader().load( "Fliese01.png" );
+
+//var material = new THREE.MeshBasicMaterial( { map: texture0 , side: THREE.DoubleSide, wireframe: false } );
+var material = [
+	new THREE.MeshBasicMaterial( { map: texture0, side: THREE.DoubleSide } ), // 0 material index
+	new THREE.MeshBasicMaterial( { map: texture1, side: THREE.DoubleSide } ), // 1
+	new THREE.MeshBasicMaterial( { map: texture2, side: THREE.DoubleSide } ), // 2
+	new THREE.MeshBasicMaterial( { map: texture3, side: THREE.DoubleSide } ), // 3
+	new THREE.MeshBasicMaterial( { map: texture4, side: THREE.DoubleSide } ), // 4
+	new THREE.MeshBasicMaterial( { map: texture5, side: THREE.DoubleSide } ), // 5
+	new THREE.MeshBasicMaterial( { map: texture6, side: THREE.DoubleSide } ), // 6
+	new THREE.MeshBasicMaterial( { map: texture0, side: THREE.DoubleSide } ), // 7
+];
+
+// Description of the design in THREEg.js section Labyrinth-3D-2D 
+
+var design3D = [
+	// upper storey first
+	//23456789.......
+	[
+	'     M         G', // 1
+	'     H          ', // 2
+	'     H          ', // 3
+	'   F-*--7       ', // 4
+	'   I*7**1       ', // 5
+	' C:v*L.**:::7   ', // 6
+	'   L*...J   U   ', // 7
+	'    H           ', // 8
+	'    L::::3      '  // 9	
+	],[
+	'                ', // 1
+	'                ', // 2
+	'          G     ', // 3
+	'                ', // 4
+	'                ', // 5
+	'   #            ', // 6
+	'                ', // 7
+	'                ', // 8
+	'                '  // 9	
+	],[
+	'F::3            ', // 1
+	'H    F:::::7    ', // 2
+	'H    H     H    ', // 3
+	'H  F-*-7   H    ', // 4
+	'H  I****:::1    ', // 5
+	'L::x***1   H    ', // 6
+	'   I...J   H    ', // 7
+	'   H   F:7 L:::7', // 8
+	'   L:::J L:::::J'  // 9	
+	]];
+	
+	// labyrinth material index
+	var materialIndex3D = [
+	// upper storey first
+	// px, nx, py, ny, pz, nz 
+	[ 0, 1, 2, 3, 4, 5 ], 
+	[ 0, 0, 1, 1, 2, 2 ],
+	[ 6, 7, 6, 7, 6, 7 ],
+	];
+
+	//--------------------------------------------
+		
+	var design2D = [  // will be converted to design 3D
+	' ++++++++++   ',
+	' +++  ++  ++  ',
+	' +++  +++     ',
+	'++ ++ ++++++++',
+	' +++++ + +   +',
+	'   +  ++ +++++',
+	'   ++++  +    '
+	];
+	
+	var materialIndex2D = [
+	
+	// px, nx, py, ny, pz, nz 
+	0, 1, 2, 3, 4, 5 
+	
+	];
+		
+geometry3D = new THREE.BufferGeometry();
+geometry3D.createLabyrinth = THREEg.createLabyrinth; // insert the methode from THREEg.js
+geometry3D.createLabyrinth( '3D', design3D, materialIndex3D ); // apply the methode
+var mesh3D = new THREE.Mesh( geometry3D, material );
+scene.add( mesh3D );
+
+geometry2D = new THREE.BufferGeometry();
+geometry2D.createLabyrinth = THREEg.createLabyrinth; // insert the methode from THREEg.js
+geometry2D.createLabyrinth( '2D', design2D, materialIndex2D ); // apply the methode
+var mesh2D = new THREE.Mesh( geometry2D, material );
+scene.add( mesh2D );
+
+mesh2D.translateX( -20 );
+
+animate();
+
+function animate() {
+
+	requestAnimationFrame( animate );	
+	renderer.render( scene, camera );
+	controls.update();
+	
+}
+</script>
+
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<!-- see https://discourse.threejs.org/t/create-a-curved-plane-surface-which-dynamically-changes-its-size/6161/16 -->
+<head>
+	<title> RoadMarking </title>
+	<meta charset="utf-8" />
+	<style>	body { margin: 0;} </style>
+</head>
+<body> 	
+
+</body>
+	<script src="../js/three.min.102.js"></script>
+	<script src="../js/OrbitControls.js"></script>
+	<script src="../js/THREEg.js"></script>
+	
+<script>
+
+// @author hofk
+
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera( 55, window.innerWidth / window.innerHeight, 0.1, 200 );
+camera.position.set( -1, 14, 24 );
+var renderer = new THREE.WebGLRenderer( { antialias: true } );
+renderer.setSize( window.innerWidth, window.innerHeight );
+renderer.setClearColor( 0x11ff33, 1 );	
+var container = document.createElement( 'div' );
+document.body.appendChild( container );
+container.appendChild( renderer.domElement ); 
+var controls = new THREE.OrbitControls( camera, renderer.domElement );
+
+var light = new THREE.AmbientLight( 0xffffff ); 
+scene.add( light );
+
+var gridHelper = new THREE.GridHelper( 100, 100 );
+scene.add( gridHelper );
+
+var curvePoints =  [
+ -25, 0.2, -25,
+ -24, 0.2, -24,
+ -4, 2, -9,
+ 4, 1, -6,
+ 6, 0, 0,
+ -3, 1, 1,
+ -11, 0, 6,
+ -12, 1, 1,
+ -7, 1, -3,
+ 7, 8, -9,
+ 13, 2, -12,
+];
+var lengthSegments = 200;
+var trackDistances = [ -0.62, -0.6, -0.02, 0.02, 0.6, 0.62 ];
+
+var g = new THREE.BufferGeometry( );
+g.createRoad = THREEg.createRoad;
+g.createRoad( curvePoints, lengthSegments, trackDistances );
+//g.createRoad( ); // all parameters default
+
+tex = new THREE.TextureLoader().load( 'CentralMarking.png' );
+tex.wrapS = THREE.RepeatWrapping;
+//tex.wrapT = THREE.RepeatWrapping;
+tex.repeat.set( lengthSegments / 2 );
+
+var material = [
+	
+	new THREE.MeshBasicMaterial( { color: 0xffffff, side: THREE.DoubleSide, wireframe: true} ),
+	new THREE.MeshBasicMaterial( { color: 0x000000, side: THREE.DoubleSide, wireframe: true} ),
+	new THREE.MeshBasicMaterial( { map: tex, side: THREE.DoubleSide, wireframe: true } ),
+	new THREE.MeshBasicMaterial( { color: 0x000000, side: THREE.DoubleSide} ),
+	new THREE.MeshBasicMaterial( { color: 0xffffff, side: THREE.DoubleSide} ),
+	
+];
+
+var mesh = new THREE.Mesh( g, material );
+scene.add( mesh );
+
+animate();
+
+//............................
+
+function animate() {
+
+	requestAnimationFrame( animate );	
+	renderer.render( scene, camera );
+	controls.update();
+	
+}
+</script>
+
+</html>

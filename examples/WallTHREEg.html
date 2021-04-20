@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+
+<head>
+	<title> Wall </title>
+	<meta charset="utf-8" />
+	<style>	body { margin: 0;} </style>
+</head>
+<body> </body>
+	<script src="../js/three.min.127.js"></script>
+	<script src="../js/OrbitControls.127.js"></script>
+	<script src="../js/THREEg.js"></script>
+	
+<script>
+
+// @author hofk
+
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera( 65, window.innerWidth / window.innerHeight, 0.01, 500 );
+camera.position.set( 0, 10, 50 );
+var renderer = new THREE.WebGLRenderer( { antialias: true } );
+renderer.setSize( window.innerWidth, window.innerHeight );
+renderer.setClearColor( 0x11ff33, 1 );	
+var container = document.createElement( 'div' );
+document.body.appendChild( container );
+container.appendChild( renderer.domElement ); 
+var controls = new THREE.OrbitControls( camera, renderer.domElement );
+
+window.addEventListener( 'resize', onWindowResize );
+
+var clock = new THREE.Clock( );
+var light = new THREE.AmbientLight( 0xffffff ); 
+scene.add( light );
+
+var gridHelper = new THREE.GridHelper( 75, 75 );
+scene.add( gridHelper );
+
+var curvePoints =  [
+ -16, 0,  24,
+  -2, 0,  24,
+  10, 3,  16,
+  14, 2,   6,
+  28, 0,   4,
+  22, 1,  -8,
+  10, 2, -14,
+   0, 5, -12,
+  -4, 2,  -6,
+ -16, 0,   0,
+ -20, 3,   8,
+ -24, 0,  24,
+ -16, 0,  24  
+];
+
+var lengthSegments = 400;
+var sidesDistances = [ [ -0.9, -0.3, 0.3, 0.9 ], [ -0.4, 0, 0.4 ], [ -0.9, -0.3, 0.3, 0.9 ], [ -0.9, 1.1 ] ];
+
+var gWall = new THREE.BufferGeometry( );
+gWall.createWall = THREEg.createWall;
+gWall.createWall( curvePoints, lengthSegments, sidesDistances );
+//gWall.createWall( ); // all parameters default
+
+tex = new THREE.TextureLoader().load( 'brick.jpg' );
+tex.wrapS = THREE.RepeatWrapping;
+tex.wrapT = THREE.RepeatWrapping;
+tex.repeat.set( lengthSegments / 2, 4 );
+
+var material = [
+		
+	new THREE.MeshBasicMaterial( { map: tex, side: THREE.DoubleSide } ),
+	new THREE.MeshBasicMaterial( { color: 0xff8844, side: THREE.DoubleSide, wireframe: true } ),
+	new THREE.MeshBasicMaterial( { color: 0xffff00, side: THREE.DoubleSide, wireframe: true } ),
+	new THREE.MeshBasicMaterial( { color: 0x000000, side: THREE.DoubleSide } ),
+	new THREE.MeshBasicMaterial( { color: 0xffffff, side: THREE.DoubleSide } ),
+	new THREE.MeshBasicMaterial( { color: 0x128821, side: THREE.DoubleSide } ),
+	new THREE.MeshBasicMaterial( { map: tex, side: THREE.DoubleSide } ),
+	new THREE.MeshBasicMaterial( { color: 0x0000ff, side: THREE.DoubleSide, wireframe: true } ),
+	new THREE.MeshBasicMaterial( { color: 0x004400, side: THREE.DoubleSide } ),
+	
+];
+
+var mesh = new THREE.Mesh( gWall, material );
+scene.add( mesh );
+
+var ball = new THREE.Mesh(
+		new THREE.SphereBufferGeometry( 0.25 ),
+		new THREE.MeshBasicMaterial( { color: 0xff0000, side: THREE.DoubleSide, wireframe: true } )
+	);
+	
+scene.add( ball );
+var ballIdx = 0;
+var ballX, ballY, ballZ;
+
+
+var gTngt = new THREE.BufferGeometry( ); // tangent
+gTngt.positions = new Float32Array( 6 );
+gTngt.setAttribute( 'position', new THREE.BufferAttribute( gTngt.positions, 3 ).setUsage( THREE.DynamicDrawUsage ) );
+lineTngt = new THREE.Line( gTngt, new THREE.LineBasicMaterial( { color: 0xff00ff, side: THREE.DoubleSide } ) );
+scene.add( lineTngt );
+
+var gNorm = new THREE.BufferGeometry( ); // normal
+gNorm.positions = new Float32Array( 6 );
+gNorm.setAttribute( 'position', new THREE.BufferAttribute( gNorm.positions, 3 ).setUsage( THREE.DynamicDrawUsage ) );
+lineNorm = new THREE.Line( gNorm, new THREE.LineBasicMaterial( { color: 0xff0000, side: THREE.DoubleSide } ) );
+scene.add( lineNorm );
+
+var gBino = new THREE.BufferGeometry( ); // binormal
+gBino.positions = new Float32Array( 6 );
+gBino.setAttribute( 'position', new THREE.BufferAttribute( gBino.positions, 3 ).setUsage( THREE.DynamicDrawUsage ) );
+lineBino = new THREE.Line( gBino, new THREE.LineBasicMaterial( { color: 0x0000ff, side: THREE.DoubleSide } ) );
+scene.add( lineBino );
+
+var sysIdx = 0;
+
+var t1 = 0;
+var t2;
+
+animate();
+
+//............................
+
+function animate( ) {
+
+	t2 = clock.getElapsedTime ( ); 
+	requestAnimationFrame( animate );
+	renderer.render( scene, camera );
+	
+	if ( t2 - t1 > 0.04 ) {
+		
+		ballX = gWall.points[ ballIdx ].x + gWall.n[ ballIdx ].x * 0.8; 
+		ballY = gWall.points[ ballIdx ].y - 0.6;
+		ballZ = gWall.points[ ballIdx ].z + gWall.n[ ballIdx ].z * 0.8;
+		
+		ball.position.set( ballX, ballY, ballZ );
+		
+		ballIdx ++;
+		
+		if ( ballIdx === gWall.points.length  ) ballIdx = 0;
+		
+		gTngt.positions[ 0 ] = gWall.points[ sysIdx ].x;  // tangent
+		gTngt.positions[ 1 ] = gWall.points[ sysIdx ].y;
+		gTngt.positions[ 2 ] = gWall.points[ sysIdx ].z;
+		
+		gTngt.positions[ 3 ] = gWall.points[ sysIdx ].x + gWall.t[ sysIdx ].x * 2;
+		gTngt.positions[ 4 ] = gWall.points[ sysIdx ].y + gWall.t[ sysIdx ].y * 2;
+		gTngt.positions[ 5 ] = gWall.points[ sysIdx ].z + gWall.t[ sysIdx ].z * 2;
+		
+		gTngt.attributes.position.needsUpdate = true;
+				
+		gNorm.positions[ 0 ] = gWall.points[ sysIdx ].x; // normal
+		gNorm.positions[ 1 ] = gWall.points[ sysIdx ].y;
+		gNorm.positions[ 2 ] = gWall.points[ sysIdx ].z;
+		
+		gNorm.positions[ 3 ] = gWall.points[ sysIdx ].x + gWall.n[ sysIdx ].x * 2;
+		gNorm.positions[ 4 ] = gWall.points[ sysIdx ].y + gWall.n[ sysIdx ].y * 2;
+		gNorm.positions[ 5 ] = gWall.points[ sysIdx ].z + gWall.n[ sysIdx ].z * 2;
+		
+		gNorm.attributes.position.needsUpdate = true;
+		
+		gBino.positions[ 0 ] = gWall.points[ sysIdx ].x; // binormal
+		gBino.positions[ 1 ] = gWall.points[ sysIdx ].y;
+		gBino.positions[ 2 ] = gWall.points[ sysIdx ].z;
+		
+		gBino.positions[ 3 ] = gWall.points[ sysIdx ].x + gWall.b[ sysIdx ].x * 2;
+		gBino.positions[ 4 ] = gWall.points[ sysIdx ].y + gWall.b[ sysIdx ].y * 2;
+		gBino.positions[ 5 ] = gWall.points[ sysIdx ].z + gWall.b[ sysIdx ].z * 2;
+		
+		gBino.attributes.position.needsUpdate = true;
+		
+		sysIdx ++;
+		
+		if ( sysIdx === gWall.points.length  ) sysIdx = 0;
+		
+		t1 = t2;
+		
+	}
+	
+	controls.update();
+	
+}
+
+function onWindowResize() {
+
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize( window.innerWidth, window.innerHeight );
+
+  animate();
+
+}
+
+</script>
+
+</html>

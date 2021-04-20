@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<!-- @author hofk -->
+<head>
+	<title> ProfiledContourGeometryMM  </title>
+	<meta charset="utf-8" />
+	<style>
+	body {
+		margin: 0;
+	}
+	</style>
+</head>
+<body> </body>
+	<script src="../js/three.min.127.js"></script>
+	<script src="../js/OrbitControls.127.js"></script>
+	<script src="../js/THREEg.js"></script>
+<script>
+'use strict'
+
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 1000 );
+camera.position.set( -8, 10, 20 );
+var renderer = new THREE.WebGLRenderer( { antialias: true } );
+renderer.setSize( window.innerWidth, window.innerHeight );
+document.body.appendChild( renderer.domElement );
+var controls = new THREE.OrbitControls( camera, renderer.domElement );
+window.addEventListener( 'resize', onWindowResize ); 
+
+var light = new THREE.DirectionalLight( 0xffffff, 0.6);
+light.position.setScalar( 10 );
+scene.add( light );
+scene.add(new THREE.AmbientLight( 0xffffff, 0.8));
+
+var helper = new THREE.GridHelper( 20, 20);
+scene.add( helper );
+
+var detail = 7
+var profileShape1 = [];
+
+for ( var i = 0; i < detail + 1; i ++ ){
+	
+	profileShape1.push ( 0.5 * Math.cos( i / detail * Math.PI * 2 ), 0.5 * Math.sin( i / detail * Math.PI * 2 ) );
+	
+}
+
+var contour1 = [
+	-3,  4,
+	 0,  4,
+	 4,  4,
+	 2,  1,
+	 4, -2,
+	 0, -3,
+	-4, -3,
+	-4,  0
+];
+
+var profileShape2 = [ -1,1, 1,1, 1,-1, -1,-1 ];
+
+var contour2 = [
+	 4, 0,
+	 4, 8,
+	 8, 8,
+	12, 8,
+	12, 2, // here only to show that angle of 180° vertikal works  
+	12, 0,
+];
+
+var materials = [ // rainbow-colored
+	
+	new THREE.MeshPhongMaterial( { color: 0xfa0001, side: THREE.DoubleSide } ),
+	new THREE.MeshPhongMaterial( { color: 0xff7b00, side: THREE.DoubleSide } ),
+	new THREE.MeshPhongMaterial( { color: 0xf9f901, side: THREE.DoubleSide } ),
+	new THREE.MeshPhongMaterial( { color: 0x008601, side: THREE.DoubleSide } ),
+	new THREE.MeshPhongMaterial( { color: 0x01bbbb, side: THREE.DoubleSide } ),
+	new THREE.MeshPhongMaterial( { color: 0x250290, side: THREE.DoubleSide } ),	
+	new THREE.MeshPhongMaterial( { color: 0xfc4ea5, side: THREE.DoubleSide } ),
+	new THREE.MeshPhongMaterial( { color: 0x83058a, side: THREE.DoubleSide } ),
+	new THREE.MeshPhongMaterial( { color: 0x83058a, side: THREE.DoubleSide } )
+	
+]
+
+var material = materials[ 2 ].clone();
+material.wireframe = true;
+
+var geometry1  = new THREE.BufferGeometry( );
+geometry1.createProfiledContourMMgeometry = THREEg.createProfiledContourMMgeometry;
+//..................................................... contourClosed, openEnded, profileMaterial
+geometry1.createProfiledContourMMgeometry( profileShape1, contour1, false, false, true );
+
+var fullProfile1 = new THREE.Mesh( geometry1, materials );
+fullProfile1.position.z = 6;
+scene.add( fullProfile1 );
+
+var fullProfile12 = new THREE.Mesh( geometry1, material );
+fullProfile12.position.z = -8;
+scene.add( fullProfile12 );
+
+var geometry13  = new THREE.BufferGeometry( );
+geometry13.createProfiledContourMMgeometry = THREEg.createProfiledContourMMgeometry;
+geometry13.createProfiledContourMMgeometry( profileShape1, contour1 );
+
+var fullProfile13 = new THREE.Mesh( geometry13, materials );
+fullProfile13.position.x = -5;
+scene.add( fullProfile13 );
+
+var geometry2  = new THREE.BufferGeometry( );
+geometry2.createProfiledContourMMgeometry = THREEg.createProfiledContourMMgeometry;
+geometry2.createProfiledContourMMgeometry(profileShape2, contour2, false, true );
+
+var fullProfile2 = new THREE.Mesh( geometry2, materials );
+fullProfile2.scale.set( 0.5, 0.5, 0.5 );
+scene.add( fullProfile2 );
+
+render();
+
+function render() {
+
+	requestAnimationFrame(render);
+	renderer.render(scene, camera);
+	
+}
+
+function onWindowResize() {
+
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize( window.innerWidth, window.innerHeight );
+
+  render();
+
+}
+
+</script>
+</html>

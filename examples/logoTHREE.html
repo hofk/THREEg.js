@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<!-- -->
+<head>
+	<title> THREE Logo </title>
+	<meta charset="utf-8" />
+	<style>
+	body {
+	background: #fff;
+	overflow: hidden;
+	margin: 0;
+	position: relative;
+	}
+	</style>
+</head>
+<body> </body>
+
+	<script src="../js/three.min.127.js"></script>
+	<script src="../js/OrbitControls.127.js"></script>
+	<script src="../js/THREEg.js"></script>
+
+<script>
+
+'use strict'
+
+// @author hofk
+
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.01, 10000 );
+camera.position.set( 3, 3, -12 );
+
+const renderer = new THREE.WebGLRenderer( { antialias: true } );
+renderer.setSize( window.innerWidth, window.innerHeight );
+document.body.appendChild( renderer.domElement );
+renderer.setClearColor( 0xdedede, 1 );
+
+const controls = new THREE.OrbitControls( camera, renderer.domElement );
+window.addEventListener( 'resize', onWindowResize );
+
+const clock  = new THREE.Clock( true );
+let time;
+
+const material = new THREE.MeshBasicMaterial( { color: 0x000000, side: THREE.DoubleSide, wireframe: true  } );
+
+const geometry0 = new THREE.BufferGeometry();
+geometry0.createMagicSphere = THREEg.createMagicSphere; // insert the methode from THREEg.js
+geometry0.createMagicSphere( {
+	
+ 	parts: [ 1 ], 
+	equator: 4,
+	contourmode: 'bezier',	
+	radius: function( t ){ return 3.5 },
+	pointX: function( t ){ return 0.6 },
+	pointY: function( t ){ return 0.4 },
+	
+ } );
+
+const mesh0 = new THREE.Mesh( geometry0, material );
+geometry0.morphVerticesMagicSphere( 0 );
+scene.add( mesh0 );
+
+const geometry1 = new THREE.BufferGeometry();
+geometry1.createMagicSphere = THREEg.createMagicSphere; // insert the methode from THREEg.js
+geometry1.createMagicSphere( {
+
+ 	parts: [ 1 ],
+	equator: 4,
+	radius: function( t ){ return 4 },
+	rounding: function( t ){ return 0.4 * Math.sin( 0.4 * t )  },
+    explode: function( t ){ return 0.08 * ( 1 + Math.cos( 0.1 * t ) ) }, 
+ 
+ } );
+
+const mesh1 = new THREE.Mesh( geometry1, material );
+mesh1.position.x = -6;
+scene.add( mesh1 );
+
+const geometry2 = new THREE.BufferGeometry();
+geometry2.createMagicSphere = THREEg.createMagicSphere; // insert the methode from THREEg.js
+geometry2.createMagicSphere( {
+	
+ 	parts: [ 1 ], 
+	equator: 4,
+	contourmode: 'bezier',
+	radius: function( t ){ return 3.5 * ( 0.3 + Math.abs( Math.sin( 0.4 * t ) ) ) },
+	pointX: function( t ){ return 0.6 * ( 1 + Math.sin( 0.4 * t) ) },
+	pointY: function( t ){ return 0.4 * ( 1 + Math.sin( 0.3 * t) ) },
+	
+ } );
+ 
+const mesh2 = new THREE.Mesh( geometry2, material );
+mesh2.position.x = 3.5;
+scene.add( mesh2 );
+
+
+animate( );
+
+ function animate( ) {
+	
+	requestAnimationFrame( animate );
+ 		
+	time = clock.getElapsedTime( );		
+	geometry1.morphVerticesMagicSphere( 2 * time );
+	geometry2.morphVerticesMagicSphere( time );
+	
+	renderer.render( scene, camera );
+	controls.update( );
+	
+}
+
+function onWindowResize() {
+
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize( window.innerWidth, window.innerHeight );
+
+  animate();
+
+}
+
+</script>
+
+</html>

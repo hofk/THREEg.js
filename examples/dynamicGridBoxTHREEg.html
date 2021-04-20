@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<!--   *** example MagicBox - THREEg - ***
+/**
+ * @author hofk / http://threejs.hofk.de/
+*/
+-->
+<html lang="de">
+<head>
+	<title> Magic Box </title>
+	<meta charset="utf-8" />
+</head>
+<body bgcolor="#cccccc " >
+</body>
+ 	<script src="../js/three.min.127.js"></script>
+	<script src="../js/OrbitControls.127.js"></script>
+	<script src="../js/THREEg.js"></script>
+<script>
+'use strict'
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 2000 );
+camera.position.set( 1, 2, 3);
+var renderer = new THREE.WebGLRenderer( { antialias: true } );
+renderer.setSize( window.innerWidth, window.innerHeight );
+renderer.setClearColor( 0xefefef, 1 );
+var container = document.createElement( 'div' );
+document.body.appendChild( container );
+container.appendChild( renderer.domElement );
+ 
+var controls = new THREE.OrbitControls( camera, renderer.domElement );
+window.addEventListener( 'resize', onWindowResize );
+
+controls.enableZoom = true;
+var light1 = new THREE.PointLight();
+light1.position.set( -2, 2, 4 );
+scene.add( light1 ); 
+var light2 = new THREE.PointLight();
+light2.position.set( -6, -3, -6 );
+scene.add( light2 );
+var clock  = new THREE.Clock( true );
+var time;
+var side = THREE.DoubleSide; // material
+
+var materials = [																		// material index:
+	new THREE.MeshBasicMaterial( { transparent: true, opacity: 0.45, 	side: side } ),	//  0 transparent
+	new THREE.MeshPhongMaterial( { color: 0xff0000, emissive: 0xff0000, side: side } ), //  1 red	
+	new THREE.MeshPhongMaterial( { color: 0x444444, emissive: 0x333333, side: side } )	//  2 grey
+	
+];
+
+var parameters0 = {
+	sides: [ 7,7,7,7 ],
+	materials: [ 2, 2, 2, 2, 2, 2 ],	
+	radius: function( t ){ return 0 },
+	width: function( t ) { return 1 + 0.007 * ( 1 + Math.sin( t ) ) },
+	height: function( t ) { return 1 + 0.007 * ( 1 + Math.sin( t ) ) },
+	depth: function( t ) { return 1 + 0.007 * ( 1 + Math.sin( t ) ) },	
+	widthSegments: 8,
+	heightSegments: 8,
+	depthSegments: 8,
+	waffleDeep: function( t ){ return 0.01 },
+	//explode: function( t ){ return 0.01 },
+}
+
+var geometry0 = new THREE.BufferGeometry();
+geometry0.createMagicBox = THREEg.createMagicBox;
+geometry0.createMagicBox( parameters0 );
+var mesh0 = new THREE.Mesh( geometry0, materials );
+
+scene.add( mesh0 );
+var parameters1 = {
+	sides: [ 7,7,7,7 ],
+	materials: [ 1, 1, 1, 1, 1, 1 ],
+	radius: function( t ){ return 0 },
+	widthSegments: 8,
+	heightSegments: 8,
+	depthSegments: 8,
+}
+var geometry1 = new THREE.BufferGeometry();
+geometry1.createMagicBox = THREEg.createMagicBox;
+geometry1.createMagicBox( parameters1 );
+var mesh1 = new THREE.Mesh( geometry1, materials );
+scene.add( mesh1 );
+
+animate();
+
+function animate( ) {	
+	requestAnimationFrame( animate );
+	time = clock.getElapsedTime( );	
+	geometry0.morphVerticesMagicBox( time );
+	geometry1.morphVerticesMagicBox( time );
+	renderer.render( scene, camera );
+	controls.update( );	
+}
+
+function onWindowResize() {
+
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize( window.innerWidth, window.innerHeight );
+
+  animate();
+
+}
+</script>
+</html>

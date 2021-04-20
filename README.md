@@ -9,7 +9,7 @@ The addon generates indexed or non indexed BufferGeometries. Non indexed allows 
 @author hofk / http://sandbox.threejs.hofk.de/
  or http://sandboxthreeg.threejs.hofk.de/
  
-Replace from revision 110 .addAttribute with .setAttribute.
+Replace for newer revisions  .addAttribute with .setAttribute. and .setDynamic( true ) with .setUsage( THREE.DynamicDrawUsage )
 
 For more efficiency.
 

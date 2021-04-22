@@ -2,6 +2,8 @@
 
 #### A three.js addon to create special or extended geometries.
 
+(See also  https://github.com/hofk/threejsResources)
+
 The addon generates indexed or non indexed BufferGeometries. Non indexed allows an explosion representation.
 
 *License identical to three.js*

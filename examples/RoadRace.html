@@ -8,9 +8,10 @@
 <body> 	
 
 </body>
-	<script src="../js/three.min.127.js"></script>
-	<script src="../js/OrbitControls.127.js"></script>
+	<script src="../js/three.min.128.js"></script>
+	<script src="../js/OrbitControls.128.js"></script>
 	<script src="../js/THREEg.js"></script>
+	
 <script>
 
 // @author hofk
@@ -25,9 +26,6 @@ var container = document.createElement( 'div' );
 document.body.appendChild( container );
 container.appendChild( renderer.domElement ); 
 var controls = new THREE.OrbitControls( camera, renderer.domElement );
-
-window.addEventListener( 'resize', onWindowResize );
-
 var clock = new THREE.Clock( );
 var light = new THREE.AmbientLight( 0xffffff ); 
 scene.add( light );
@@ -85,8 +83,8 @@ tex.repeat.set( lengthSegments * 2 );
 
 var material = [
 	
-	new THREE.MeshBasicMaterial( { color: 0xffffff, side: THREE.DoubleSide, wireframe: true } ),
-	new THREE.MeshBasicMaterial( { color: 0x000000, side: THREE.DoubleSide, wireframe: true } ),
+	new THREE.MeshBasicMaterial( { color: 0xffffff, side: THREE.DoubleSide  } ),
+	new THREE.MeshBasicMaterial( { color: 0x000000, side: THREE.DoubleSide  } ),
 	new THREE.MeshBasicMaterial( { map: tex, side: THREE.DoubleSide } ),
 	new THREE.MeshBasicMaterial( { color: 0x000000, side: THREE.DoubleSide} ),
 	new THREE.MeshBasicMaterial( { color: 0xffffff, side: THREE.DoubleSide} ),
@@ -98,7 +96,7 @@ scene.add( mesh );
 
 var h = 0.08;
 var redCar = new THREE.Mesh(
-		new THREE.BoxBufferGeometry( 0.1, h * 1.9 , 0.3 ),
+		new THREE.BoxBufferGeometry( 0.3, h * 1.9 , 0.1 ),
 		new THREE.MeshBasicMaterial( { color: 0xff0000, side: THREE.DoubleSide, wireframe: true } )
 	);	
 scene.add( redCar );
@@ -106,7 +104,7 @@ var redCarIdx = 0;
 var redCarX, redCarY, redCarZ;
 
 var blueCar = new THREE.Mesh(
-		new THREE.BoxBufferGeometry( 0.12, h * 1.9, 0.4 ),
+		new THREE.BoxBufferGeometry( 0.4, h * 1.9, 0.12 ),
 		new THREE.MeshBasicMaterial( { color: 0x0000ff, side: THREE.DoubleSide, wireframe: true  } )
 	);	
 scene.add( blueCar );
@@ -136,6 +134,9 @@ var sysIdx = 8;
 var t1 = 0;
 var t2;
 
+const M3 = new THREE.Matrix3( );
+const M4 = new THREE.Matrix4( );
+
 animate();
 
 //............................
@@ -147,16 +148,24 @@ function animate( ) {
 	renderer.render( scene, camera );
 	
 	if ( t2 - t1 > 0.04 ) {
-		
+ 
 		redCarX = gRoad.points[ redCarIdx ].x + gRoad.n[ redCarIdx ].x * trackDistances[ 4 ] * 0.6; 
 		redCarY = gRoad.points[ redCarIdx ].y + h;
 		redCarZ = gRoad.points[ redCarIdx ].z + gRoad.n[ redCarIdx ].z * trackDistances[ 4 ] * 0.6;
 		
 		redCar.position.set( redCarX, redCarY, redCarZ );
 		
-		redCar.rotation.y = 1.57 + Math.atan2( -gRoad.t[ redCarIdx ].z, gRoad.t[ redCarIdx ].x );
-		// other: take tangent, binormal for calculation
+		// redCar.rotation.y = Math.atan2( -gRoad.t[ redCarIdx ].z, gRoad.t[ redCarIdx ].x ); // only rotation by y
 		
+		//  take tangent, binormal for calculation			
+		M3.set( // transposed arranged
+			gRoad.t[ redCarIdx ].x, gRoad.b[ redCarIdx ].x, gRoad.n[ redCarIdx ].x,
+			gRoad.t[ redCarIdx ].y, gRoad.b[ redCarIdx ].y, gRoad.n[ redCarIdx ].y,
+			gRoad.t[ redCarIdx ].z, gRoad.b[ redCarIdx ].z, gRoad.n[ redCarIdx ].z
+		);
+		M4.setFromMatrix3( M3 );	
+		redCar.setRotationFromMatrix( M4 );
+
 		redCarIdx ++;
 		
 		if ( redCarIdx === gRoad.points.length  ) redCarIdx = 0;
@@ -167,8 +176,16 @@ function animate( ) {
 		
 		blueCar.position.set( blueCarX, blueCarY, blueCarZ );
 		
-		blueCar.rotation.y = 1.57 + Math.atan2( -gRoad.t[ blueCarIdx ].z, gRoad.t[ blueCarIdx ].x );
-		// other: take tangent, binormal for calculation
+		// blueCar.rotation.y =  Math.atan2( -gRoad.t[ blueCarIdx ].z, gRoad.t[ blueCarIdx ].x );  // only rotation by y
+		
+		// take tangent, binormal for calculation
+		M3.set( // transposed arranged
+			gRoad.t[ blueCarIdx ].x, gRoad.b[ blueCarIdx ].x, gRoad.n[ blueCarIdx ].x,
+			gRoad.t[ blueCarIdx ].y, gRoad.b[ blueCarIdx ].y, gRoad.n[ blueCarIdx ].y, 
+			gRoad.t[ blueCarIdx ].z, gRoad.b[ blueCarIdx ].z, gRoad.n[ blueCarIdx ].z
+			);
+		M4.setFromMatrix3( M3 );	
+		blueCar.setRotationFromMatrix( M4 );
 		
 		blueCarIdx --;
 		
@@ -214,18 +231,6 @@ function animate( ) {
 	controls.update();
 		
 }
-
-function onWindowResize() {
-
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-
-  renderer.setSize( window.innerWidth, window.innerHeight );
-
-  animate();
-
-}
-
 </script>
 
 </html>

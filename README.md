@@ -8,8 +8,8 @@ The addon generates indexed or non indexed BufferGeometries. Non indexed allows 
 
 *License identical to three.js*
 
-@author hofk / http://sandbox.threejs.hofk.de/
- or http://sandboxthreeg.threejs.hofk.de/
+@author hofk / https://hofk.de/main/threejs/sandbox/
+ or https://hofk.de/main/threejs/sandboxthreeg/
  
 Replace for newer revisions
 
